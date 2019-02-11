@@ -6,7 +6,7 @@
 % Description: This code does some basic simulations on sample IMU data and
 % graphs the orientation along 3 axises as the IMU is lifted from a
 % surface.
-data = fopen('ButtonClick.txt','r'); %get the IMU data
+data = fopen('FastPickup1.txt','r'); %get the IMU data
 
 % Convert the data from the file into a matrix.
 formatSpec = '%d %f';
@@ -19,6 +19,12 @@ disp(A);
 accelerometerReadings = 2.93*9.81*A(:,5:7)/1000;
 gyroscopeReadings = 0.98*A(:,2:4)*0.0174533;
 magnetometerReadings = 0.0488*A(:,8:10);
+
+% ld = load('rpy_9axis.mat');
+% 
+% accelerometerReadings = ld.sensorData.Acceleration;
+% gyroscopeReadings = ld.sensorData.AngularVelocity;
+% magnetometerReadings = ld.sensorData.MagneticField;
 
 % For visulization of the orientation of the object
 % viewer = fusiondemo.OrientationViewer;
@@ -47,9 +53,11 @@ fclose(data);
 
 trajectory = kinematicTrajectory;
 [position,orientation,velocity,acceleration,angularVelocity] = trajectory(accelerometerReadings, angularvelocity);
-
+length = size(position(:,1));
 subplot(2,1,2)
-plot3(position(:,1), position(:,2), position(:,3));
+
+plot3(position(:,1), position(:,2), position(:,3),'b-', position(length(1,1), 1), position(length(1,1), 2), position(length(1,1), 3), 'r*');
+title('Actual trajectory')
 
 
 %Generating noises
@@ -78,7 +86,9 @@ trajectory_noise = kinematicTrajectory;
 [position_noise,orientation,velocity,acceleration,angularVelocity] = trajectory_noise(accelerometerReadings_noise, angularvelocity_noise);
 
 subplot(2,1,2)
-plot3(position_noise(:,1), position_noise(:,2), position_noise(:,3));
+
+plot3(position_noise(:,1), position_noise(:,2), position_noise(:,3), 'b-', position_noise(length(1,1),1), position_noise(length(1,1),2), position_noise(length(1,1),3),'r*');
+title('Trajectory with noises in sensor reading')
 
 %reconstruting the trijectory
 FUSE_noise = ahrsfilter('AccelerometerNoise', 0.001, 'GyroscopeNoise', 0.001, 'MagnetometerNoise', 0.001);
@@ -96,4 +106,11 @@ trajectory_noise = kinematicTrajectory;
 [position_kal,orientation_kal,velocity_kal,acceleration_kal,angularVelocity_kal] = trajectory_noise(accelerometerReadings_noise, angularVelocity_kal);
 
 subplot(2,1,2)
-plot3(position_kal(:,1), position_kal(:,2), position_kal(:,3));
+
+plot3(position_kal(:,1), position_kal(:,2), position_kal(:,3), 'b-', position_kal(length(1,1),1), position_kal(length(1,1), 2),position_kal(length(1,1),3),'r*');
+
+% plot3(position_kal(length(1,1),1), position_kal(length(1,1), 2),position_kal(length(1,1),3),'r*');
+title('Corrected trajectory with using Kalman Filter')
+
+figure(4)
+plot(time, gyroscopeReadings);

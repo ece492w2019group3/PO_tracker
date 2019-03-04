@@ -1,0 +1,49 @@
+; Example scatter file for the Altera SOC
+
+; Code and data in main memory (DDR)
+SDRAM 0x01000000 0x3F000000
+{
+    APP_CODE +0
+    {
+        startup.o(StartUp +FIRST)
+        * (+RO)
+        * (+RW,+ZI)
+    }
+    
+    ; IRQ stacks for core 0 - see startup.s
+    IRQ_STACK        +0 ALIGN 8 EMPTY  4096 {}
+    
+    ; FIQ stacks for core 0 - see startup.s
+    FIQ_STACK        +0 ALIGN 8 EMPTY  4096 {}
+    
+    ; ABT stacks for core 0 - see startup.s
+    ABT_STACK        +0 ALIGN 8 EMPTY  4096 {}
+    
+    ; UND stacks for core 0 - see startup.s
+    UND_STACK        +0 ALIGN 8 EMPTY  4096 {}
+    
+    ; SVC stacks for core 0 - see startup.s
+    SVC_STACK        +0 ALIGN 8 EMPTY  4096 {}
+    
+    ; SYS stacks for core 0 - see startup.s
+    SYS_STACK        +0 ALIGN 8 EMPTY  4096 {}
+
+    ; Stack and Heap Size is 32MB. If you are creating large buffers
+	; or structures you'll need to expand this
+    ARM_LIB_STACKHEAP +0 ALIGN 8 EMPTY 0x02000000 ; Application heap and stack
+    { }
+    
+    PAGE_TABLE +0 ALIGN 16384 EMPTY 0x4000
+    {
+    }
+    	
+}
+
+; On chip ram reserved for descriptors
+OCRAM 0xFFFF0000 0x10000
+{
+    NET_DESC 0xFFFFE000 EMPTY 0x1000
+    {
+    }
+    
+}

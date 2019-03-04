@@ -1,0 +1,47 @@
+/*
+ * LSM9DS1.h
+ * Header file containing register addresses for LSM9DS1 IMU chip
+ *
+ *  Created on: Mar 4, 2019
+ *      Author: mhoule
+ */
+
+#ifndef APP_LSM9DS1_H_
+#define APP_LSM9DS1_H_
+/*  Accelerometer and gyroscope registers  */
+#define ACT_THS 			0x04
+#define ACT_DUR 			0X05
+#define INT_GEN_CFG_XL 		0X06
+#define INT_GEN_THS_X_XL 	0X07
+#define INT_GEN_THS_Y_XL	0X08
+#define INT_GEN_THS_Z_XL	0X09
+#define INT_GEN_DUR_XL		0X0A
+#define REFERENCE_G			0X0B
+#define INT1_CTRL			0X0C
+#define INT2_CTRL			0X0D
+#define WHO_AM_I			0X0F
+#define CTRL_REG1_G			0X10
+#define CTRL_REG2_G			0X11
+#define CTRL_REG3_G			0X12
+#define ORIENT_CFG_G		0X13
+#define INT_GEN_SRC_G		0X14
+#define OUT_TEMP			0X15	// 16-bit register
+#define STATUS_REG			0X17
+#define OUT_X_G				0X18	// 16-bit register
+#define OUT_Y_G				0X1A	// 16-bit register
+#define OUT_Z_G				0X1C	// 16-bit register
+#define CTRL_REG4			0X1E
+#define CTRL_REG5_XL		0X1F
+#define CTRL_REG6_XL		0X20
+#define CTRL_REG7_XL		0X21
+#define CTRL_REG8			0X22
+#define CTRL_REG9			0X23
+#define CTRL_REG10			0X24
+#define INT_GEN_SRC_XL		0X26
+#define STATUS_REG			0X27
+#define OUT_X_XL			0X28	// 16-bit register
+#define OUT_Y_XL			0X2A	// 16-bit register
+#define OUT_Z_XL			0X2C	// 16-bit register
+
+
+#endif /* APP_LSM9DS1_H_ */

@@ -1,0 +1,14 @@
+/*
+ * LSM9DS1.h
+ * Header file containing register addresses for LSM9DS1 IMU chip
+ *
+ *  Created on: Mar 4, 2019
+ *      Author: mhoule
+ */
+
+#ifndef APP_LSM9DS1_H_
+#define APP_LSM9DS1_H_
+
+#define ACT_THS 0x04
+
+#endif /* APP_LSM9DS1_H_ */

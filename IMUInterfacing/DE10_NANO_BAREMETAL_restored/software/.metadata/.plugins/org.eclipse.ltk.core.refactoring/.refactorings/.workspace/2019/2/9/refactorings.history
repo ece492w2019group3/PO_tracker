@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename resource &apos;uC_Template_Project&apos; to &apos;IMU_Positional_Tracking&apos;" description="Rename resource &apos;uC_Template_Project&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/uC_Template_Project" name="IMU_Positional_Tracking" stamp="1551198118470" updateReferences="true"/>
-</session>

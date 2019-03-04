@@ -6,20 +6,24 @@
 % Description: This code does some basic simulations on sample IMU data and
 % graphs the orientation along 3 axises as the IMU is lifted from a
 % surface.
-data = fopen('FastPickup1.txt','r'); %get the IMU data
+data = fopen('SlowPickup1.txt','r'); %get the IMU data
 
 % Convert the data from the file into a matrix.
 formatSpec = '%d %f';
 sizeA = [12 Inf];
 A = fscanf(data,formatSpec,sizeA)
 A = A'
-disp(A);
+% disp(A);
 % Get the acclerometer, gyroscope, and magnetometer readings from the
 % matrix.
 accelerometerReadings = 2.93*9.81*A(:,5:7)/1000;
+accelerometerReadings = accelerometerReadings - mean(accelerometerReadings(1:50,:))
 gyroscopeReadings = 0.98*A(:,2:4)*0.0174533;
+gyroscopeReadings = gyroscopeReadings - mean(gyroscopeReadings(1:50,:))
 magnetometerReadings = 0.0488*A(:,8:10);
-
+magnetometerReadings = magnetometerReadings - mean(magnetometerReadings(1:50,:))
+disp(accelerometerReadings)
+disp(mean(accelerometerReadings(1:100,1:3)))
 % ld = load('rpy_9axis.mat');
 % 
 % accelerometerReadings = ld.sensorData.Acceleration;
@@ -113,4 +117,7 @@ plot3(position_kal(:,1), position_kal(:,2), position_kal(:,3), 'b-', position_ka
 title('Corrected trajectory with using Kalman Filter')
 
 figure(4)
-plot(time, gyroscopeReadings);
+plot(time,eulerd(orientation,'ZYX','frame'))
+title('Orientation Estimate')
+legend('z-axis', 'y-axis', 'x-axis')
+ylabel('Rotation (degrees)')

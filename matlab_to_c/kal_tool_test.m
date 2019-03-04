@@ -16,7 +16,7 @@ magID = fopen('mag.txt','w');
 fprintf(magID,'%6.4f %6.4f %6.4f\n',mag);
 fclose(magID);
 
-[acc, gyro, mag] = txt_parsing('acc.txt', 'gyro.txt', 'mag.txt');
+%[acc, gyro, mag] = txt_parsing('acc.txt', 'gyro.txt', 'mag.txt');
 
 % r_accid = fopen('acc.txt', 'r');
 % r_acc = zeros(1600, 3);
@@ -50,4 +50,4 @@ fclose(magID);
 %     tline = fgetl(r_magid);
 % end
 % fclose(r_accid);
-% orientation = kal_tool(acc, gyro, mag);
+[orientation, angularVelocity] = kal_tool(acc, gyro, mag);

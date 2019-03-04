@@ -1,0 +1,14 @@
+conj.obj
+kinematicTrajectory.obj
+normalize.obj
+power1.obj
+prepRotate.obj
+quaternioncg.obj
+rotatepoint.obj
+rotvec2qparts.obj
+sqrt.obj
+sum.obj
+trajectory_tool.obj
+trajectory_tool_initialize.obj
+trajectory_tool_terminate.obj
+vertcat.obj

@@ -15,8 +15,11 @@ disp(A);
 % Get the acclerometer, gyroscope, and magnetometer readings from the
 % matrix.
 accelerometerReadings = 2.93*9.81*A(:,5:7)/1000;
+accelerometerReadings = accelerometerReadings - mean(accelerometerReadings)
 gyroscopeReadings = 0.98*A(:,2:4)*0.0174533;
+gyroscopeReadings = gyroscopeReadings - mean(gyroscopeReadings)
 magnetometerReadings = 0.0488*A(:,8:10);
+magnetometerReadings = magnetometerReadings - mean(magnetometerReadings)
 viewer = fusiondemo.OrientationViewer;
 ifilt = imufilter;
 for ii = 1:size(accelerometerReadings, 1)

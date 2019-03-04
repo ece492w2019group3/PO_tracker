@@ -1,0 +1,11 @@
+APP/timer.o: ../APP/timer.c
+APP/timer.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uC-CPU/ARM-Cortex-A/cpu.h
+APP/timer.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uC-CPU/cpu_def.h
+APP/timer.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/APP/cpu_cfg.h
+APP/timer.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uC-LIBS/lib_def.h
+APP/timer.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/BSP/bsp.h
+APP/timer.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/BSP/bsp_int.h
+APP/timer.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/socal/hps.h
+APP/timer.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/socal/socal.h
+APP/timer.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uCOS-II/Ports/os_cpu.h
+APP/timer.o: ../APP/timer.h

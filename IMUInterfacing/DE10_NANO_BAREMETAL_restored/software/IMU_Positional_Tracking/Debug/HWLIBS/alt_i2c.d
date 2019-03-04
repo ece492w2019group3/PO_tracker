@@ -1,0 +1,12 @@
+HWLIBS/alt_i2c.o: ../HWLIBS/alt_i2c.c
+HWLIBS/alt_i2c.o: ../HWLIBS/alt_i2c.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/hwlib.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/alt_clock_manager.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/alt_clock_group.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/socal/alt_clkmgr.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/socal/alt_i2c.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/socal/alt_rstmgr.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/socal/hps.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/socal/socal.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/soc_cv_av/alt_reset_manager.h
+HWLIBS/alt_i2c.o: C:/intelFPGA/17.0/embedded/ip/altera/hps/altera_hps/hwlib/include/alt_printf.h

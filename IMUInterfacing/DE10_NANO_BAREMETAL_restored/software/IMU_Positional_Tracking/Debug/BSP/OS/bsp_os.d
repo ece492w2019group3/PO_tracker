@@ -1,0 +1,13 @@
+BSP/OS/bsp_os.o: ../BSP/OS/bsp_os.c
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uC-LIBS/lib_def.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uC-CPU/cpu_def.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uC-CPU/ARM-Cortex-A/cpu.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/APP/cpu_cfg.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uCOS-II/Ports/os_cpu.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/BSP/bsp.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/BSP/OS/bsp_os.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uCOS-II/Source/os.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/uCOS-II/Source/ucos_ii.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/APP/app_cfg.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/APP/os_cfg.h
+BSP/OS/bsp_os.o: C:/Users/mhoule/Documents/PO_tracker/IMUInterfacing/DE10_NANO_BAREMETAL_restored/software/IMU_Positional_Tracking/BSP/bsp_int.h

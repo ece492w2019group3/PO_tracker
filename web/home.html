@@ -137,43 +137,75 @@ body {
     </head>
 
     <body>
-
-    <div id="myDiv" ><!-- Plotly chart will be drawn inside this DIV --></div>
+    <div id="position_graph" ><!-- Plotly chart will be drawn inside this DIV --></div>
       <script>
       <!-- JAVASCRIPT CODE GOES HERE -->
-      var trace1 = {
-      x: [1, 2, 3, 4],
-      y: [10, 15, 13, 17],
-      mode: 'markers'
-      };
+      function rand() {
+        return Math.random();
+      }
 
-      var trace2 = {
-        x: [2, 3, 4, 5],
-        y: [16, 5, 11, 10],
-        mode: 'lines'
-      };
+      Plotly.plot('position_graph', [{
+        y: [1,2,3].map(rand)
+      }, {
+        y: [1,2,3].map(rand)
+      }]);
 
-      var trace3 = {
-        x: [1, 2, 3, 4],
-        y: [12, 9, 15, 12],
-        mode: 'lines+markers'
-      };
+      var cnt = 0;
+      var interval = setInterval(function() {
 
-      var data = [ trace1, trace2, trace3 ];
+        Plotly.extendTraces('position_graph', {
+          y: [[rand()], [rand()]]
+        }, [0, 1])
 
-      var layout = {};
-
-      Plotly.newPlot('myDiv', data, layout, {showSendToCloud: true});
-
-
+        if(cnt === 100) clearInterval(interval);
+      }, 300);
       </script>
     </body>
 
 
-    <p>Some descriptions here</p>
+    <p>Real time plot showing the position in space.</p>
     <h3>Orientation Graph</h3>
-    <p>Some descriptions here</p>
-    <div class="fakeimg" style="height:60px;">Image</div><br>
+
+
+    <head>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+
+    <body>
+    <div id="orientation_graph" ><!-- Plotly chart will be drawn inside this DIV --></div>
+      <script>
+      <!-- JAVASCRIPT CODE GOES HERE -->
+      function rand() {
+        return Math.random();
+      }
+
+      <!-- mode: 'lines' for drawing line; mode: 'points' for drawing points -->
+      Plotly.plot('orientation_graph', [{
+        type: 'scatter3d',
+        mode: 'points',
+        x: [1,2,3].map(rand),
+        y: [1,2,3].map(rand),
+        z: [1,2,3].map(rand),
+        opacity: 1,
+      }]);
+
+      var cnt = 0;
+
+      var interval = setInterval(function () {
+        Plotly.extendTraces('orientation_graph', {
+          x: [[Math.random()*100]],
+          y: [[Math.random()*100]],
+          z: [[Math.random()*100]]
+        }, [0], 10)
+        <!-- the last argument 10 is for the last 10 samples -->
+         if (cnt === 100) clearInterval(interval);
+      }, 500);
+      <!-- 500 is the time interval to update the graph -->
+      </script>
+      <p>Sample plot only. </p>
+    </body>
+
   </div>
 </div>
 

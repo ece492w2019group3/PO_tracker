@@ -1,5 +1,0 @@
-You need to download this first: https://nodejs.org/en/download/
-Then, in terminal, type : >> node ./server.js to start the server.
-Then, in browser, type:  http://localhost:3000/ to view the page.
-
-Note: Port Number is defined in server.js 

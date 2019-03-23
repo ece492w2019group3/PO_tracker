@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>PO Tracker</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+/* Style the body */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
+/* Header/logo Title */
+.header {
+  padding: 80px;
+  text-align: center;
+  background: #1abc9c;
+  color: white;
+}
+
+/* Increase the font size of the heading */
+.header h1 {
+  font-size: 40px;
+}
+
+/* Sticky navbar - toggles between relative and fixed, depending on the scroll position. It is positioned relative until a given offset position is met in the viewport - then it "sticks" in place (like position:fixed). The sticky value is not supported in IE or Edge 15 and earlier versions. However, for these versions the navbar will inherit default position */
+.navbar {
+  overflow: hidden;
+  background-color: #333;
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+}
+
+/* Style the navigation bar links */
+.navbar a {
+  float: left;
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 20px;
+  text-decoration: none;
+}
+
+
+/* Right-aligned link */
+.navbar a.right {
+  float: right;
+}
+
+/* Change color on hover */
+.navbar a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+/* Active/current link */
+.navbar a.active {
+  background-color: #666;
+  color: white;
+}
+
+/* Column container */
+.row {
+  display: -ms-flexbox; /* IE10 */
+  display: flex;
+  -ms-flex-wrap: wrap; /* IE10 */
+  flex-wrap: wrap;
+}
+
+
+/* Main column */
+.main {
+  -ms-flex: 70%; /* IE10 */
+  flex: 70%;
+  background-color: white;
+  padding: 20px;
+}
+
+/* Fake image, just for this example */
+.fakeimg {
+  background-color: #aaa;
+  width: 100%;
+  padding: 20px;
+}
+
+/* Footer */
+.footer {
+  padding: 20px;
+  text-align: center;
+  background: #ddd;
+}
+
+/* Responsive layout - when the screen is less than 700px wide, make the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 700px) {
+  .row {
+    flex-direction: column;
+  }
+}
+
+/* Responsive layout - when the screen is less than 400px wide, make the navigation links stack on top of each other instead of next to each other */
+@media screen and (max-width: 400px) {
+  .navbar a {
+    float: none;
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Position and Orientation Tracking System</h1>
+  <p>ECE492 Winter 2019 Group 3 </p>
+</div>
+
+<div class="navbar">
+  <a href="home.html" class="active">Home</a>
+  <a href="https://github.com/ece492w2019group3/PO_tracker">Github</a>
+  <a href="credits.html">Credits</a>
+</div>
+
+<div class="row">
+  <div class="side"> </div>
+
+    <div class="main">
+    <h2>Position Graph</h2>
+
+    <head>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+
+    <body>
+
+    <div id="myDiv" ><!-- Plotly chart will be drawn inside this DIV --></div>
+      <script>
+      <!-- JAVASCRIPT CODE GOES HERE -->
+      var trace1 = {
+      x: [1, 2, 3, 4],
+      y: [10, 15, 13, 17],
+      mode: 'markers'
+      };
+
+      var trace2 = {
+        x: [2, 3, 4, 5],
+        y: [16, 5, 11, 10],
+        mode: 'lines'
+      };
+
+      var trace3 = {
+        x: [1, 2, 3, 4],
+        y: [12, 9, 15, 12],
+        mode: 'lines+markers'
+      };
+
+      var data = [ trace1, trace2, trace3 ];
+
+      var layout = {};
+
+      Plotly.newPlot('myDiv', data, layout, {showSendToCloud: true});
+
+
+      </script>
+    </body>
+
+
+    <p>Some descriptions here</p>
+    <h3>Orientation Graph</h3>
+    <p>Some descriptions here</p>
+    <div class="fakeimg" style="height:60px;">Image</div><br>
+  </div>
+</div>
+
+
+<div class="footer">
+  <h2>Group Members: </h2>
+  <h2> Jiahao Li </h2>
+  <h2> Joanne Lai </h2>
+  <h2> Riley Voon </h2>
+  <h2> Maxime Houle</h2>
+</div>
+
+</body>
+</html>

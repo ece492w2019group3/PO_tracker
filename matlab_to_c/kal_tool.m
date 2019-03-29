@@ -1,17 +1,18 @@
-function [orientationEuler_kal, angularVelocity_kal] = kal_tool(acc,gyro, mag)
-FUSE = ahrsfilter('AccelerometerNoise', 0.001, 'GyroscopeNoise', 0.001, 'MagnetometerNoise', 0.001);
-rng(0,'twister');
-a = 0;
-b = 0.001;
-r1 = a.*randn(1600,3) + b;
-rng(0,'twister');
-r2 = a.*randn(1600,3) + b;
-rng(0,'twister');
-r3 = a.*randn(1600,3) + b;
-acc = acc +r1;
-gyro = gyro + r2;
-mag = mag + r3;
-[orientation_kal,angularVelocity_kal] = FUSE(acc,gyro, mag);
+function [orientationEuler_kal, angularVelocity] = kal_tool(acc, gyro, mag)
+% FUSE = ahrsfilter('AccelerometerNoise', 0.001, 'GyroscopeNoise', 0.001, 'MagnetometerNoise', 0.001);
+FUSE = ahrsfilter();
+% mu = [0 0 0];
+% sigma = [0.001 0 0; 0 0.001 0; 0 0 0.001];
+% R = chol(sigma);
+% r1 = repmat(mu,1,1) + randn(1,3)*R; 
+% r2 = repmat(mu,1,1) + randn(1,3)*R;
+% r3 = repmat(mu,1,1) + randn(1,3)*R;
+% acc = acc + r1;
+% gyro = gyro + r2;
+% mag = mag + r3;
+% t = acc1 +1
+
+[orientation_kal, angularVelocity] = FUSE(acc,gyro, mag);
 orientationEuler_kal = eulerd(orientation_kal,'ZYX','frame');
 
 end

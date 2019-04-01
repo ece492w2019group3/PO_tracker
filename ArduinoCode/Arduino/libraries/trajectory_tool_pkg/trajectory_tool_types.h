@@ -5,7 +5,7 @@
  * File: trajectory_tool_types.h
  *
  * MATLAB Coder version            : 4.1
- * C/C++ source code generated on  : 27-Mar-2019 12:24:35
+ * C/C++ source code generated on  : 30-Mar-2019 15:04:56
  */
 
 #ifndef TRAJECTORY_TOOL_TYPES_H
@@ -35,6 +35,18 @@ typedef struct {
 } cell_wrap_3;
 
 #endif                                 /*typedef_cell_wrap_3*/
+
+#ifndef typedef_d_matlabshared_rotations_intern
+#define typedef_d_matlabshared_rotations_intern
+
+typedef struct {
+  double a[2];
+  double b[2];
+  double c[2];
+  double d[2];
+} d_matlabshared_rotations_intern;
+
+#endif                                 /*typedef_d_matlabshared_rotations_intern*/
 
 #ifndef typedef_kinematicTrajectory
 #define typedef_kinematicTrajectory

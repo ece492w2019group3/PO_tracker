@@ -5,7 +5,7 @@
  * File: kinematicTrajectory.c
  *
  * MATLAB Coder version            : 4.1
- * C/C++ source code generated on  : 27-Mar-2019 12:24:35
+ * C/C++ source code generated on  : 30-Mar-2019 15:04:56
  */
 
 /* Include Files */
@@ -49,13 +49,18 @@ void c_kinematicTrajectory_set_Veloc(kinematicTrajectory *obj, const double val
  *                const double varargin_1[6]
  *                const double varargin_2[6]
  *                double pos[6]
+ *                double orient_a[2]
+ *                double orient_b[2]
+ *                double orient_c[2]
+ *                double orient_d[2]
  *                double vel[6]
  *                double acc[6]
  *                double av[6]
  * Return Type  : void
  */
 void kinematicTrajectory_stepImpl(kinematicTrajectory *obj, const double
-  varargin_1[6], const double varargin_2[6], double pos[6], double vel[6],
+  varargin_1[6], const double varargin_2[6], double pos[6], double orient_a[2],
+  double orient_b[2], double orient_c[2], double orient_d[2], double vel[6],
   double acc[6], double av[6])
 {
   double dt;
@@ -128,6 +133,8 @@ void kinematicTrajectory_stepImpl(kinematicTrajectory *obj, const double
   obj->pOrientation.b = rhs_b;
   obj->pOrientation.c = rhs_c;
   obj->pOrientation.d = rhs_d;
+  quaternionBase_vertcat(qimag_idx_0, qimag_idx_1, qimag_idx_2, prevQ_d, q_a[0],
+    q_b[0], q_c[0], q_d[0], orient_a, orient_b, orient_c, orient_d);
   quaternionBase_vertcat(qimag_idx_0, qimag_idx_1, qimag_idx_2, prevQ_d, q_a[0],
     q_b[0], q_c[0], q_d[0], q_a, q_b, q_c, q_d);
   quaternionBase_rotatepoint(q_a, q_b, q_c, q_d, varargin_2, av);

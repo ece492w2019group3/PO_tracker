@@ -68,8 +68,8 @@ void kal_tool(const double acc[3], const double gyro[3], const double mag[3],
   FUSE.pInputPrototype[0] = acc[0];
   FUSE.pInputPrototype[1] = acc[1];
   FUSE.pInputPrototype[2] = acc[2];
-  FUSE.pSensorPeriod = 0.01;
-  FUSE.pKalmanPeriod = 0.01;
+  FUSE.pSensorPeriod = 1/57600;
+  FUSE.pKalmanPeriod = 1/57600;
   FUSE.TunablePropsChanged = false;
   FUSE.pOrientPost.a = 1.0;
   FUSE.pOrientPost.b = 0.0;

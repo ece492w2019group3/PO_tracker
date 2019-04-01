@@ -66,7 +66,7 @@ body {
 }
 
 /* Column container */
-.row {
+.row {  
   display: -ms-flexbox; /* IE10 */
   display: flex;
   -ms-flex-wrap: wrap; /* IE10 */
@@ -75,7 +75,7 @@ body {
 
 
 /* Main column */
-.main {
+.main {   
   -ms-flex: 70%; /* IE10 */
   flex: 70%;
   background-color: white;
@@ -98,7 +98,7 @@ body {
 
 /* Responsive layout - when the screen is less than 700px wide, make the two columns stack on top of each other instead of next to each other */
 @media screen and (max-width: 700px) {
-  .row {
+  .row {   
     flex-direction: column;
   }
 }
@@ -126,15 +126,15 @@ body {
 </div>
 
 <div class="row">
+  <div class="side">
+    <h2>Credits: </h2>
+    
+
+    <p>The skeleton code for the page was taken from w3school at the link https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_example_website </p>
+    
+  </div>
   <div class="main">
-      <div class="side">
-          <h2>Credits: </h2>
-
-
-          <p>The skeleton code for the page was taken from w3school at the link https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_example_website </p>
-        </div>
-
-      </div>
+    
 </div>
 
 <div class="footer">

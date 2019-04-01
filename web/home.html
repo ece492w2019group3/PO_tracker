@@ -144,21 +144,31 @@ body {
         return Math.random();
       }
 
-      Plotly.plot('position_graph', [{
-        y: [1,2,3].map(rand)
-      }, {
-        y: [1,2,3].map(rand)
-      }]);
+      var trace1 = {
+        x: [0],
+        y: [0],
+        z: [0],
+        mode: 'lines',
+        type: 'scatter3d'
+      };
 
-      var cnt = 0;
-      var interval = setInterval(function() {
+      var layout = {
+        title: 'Position'
+      }
 
-        Plotly.extendTraces('position_graph', {
-          y: [[rand()], [rand()]]
-        }, [0, 1])
+      Plotly.plot('position_graph', [trace1], layout);
 
-        if(cnt === 100) clearInterval(interval);
-      }, 300);
+      // var cnt = 0;
+      // var interval = setInterval(function() {
+      //
+      //   Plotly.extendTraces('position_graph', {
+      //     x: [[rand()]],
+      //     y: [[rand()]],
+      //     z: [[rand()]]
+      //   }, [0])
+      //
+      //   if(cnt === 100) clearInterval(interval);
+      // }, 300);
       </script>
     </body>
 
@@ -170,40 +180,147 @@ body {
     <head>
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.8/p5.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.8/addons/p5.dom.js"></script>
     </head>
 
     <body>
     <div id="orientation_graph" ><!-- Plotly chart will be drawn inside this DIV --></div>
       <script>
       <!-- JAVASCRIPT CODE GOES HERE -->
+      // websocket communication code from https://github.com/ITPNYU/physcomp/tree/master/labs2014/Node%20Serial%20Lab
+      var socket = new WebSocket("ws://localhost:8080");
+      var text;
+      var i = 0;
+      setup();
+
+      function setup() {
+        socket.onopen = openSocket;
+        socket.onmessage = showData;
+      }
+
+      function openSocket() {
+
+      }
+
+      function showData(result) {
+        var values = result.data.split(',');
+        // orientation graph extension for polar plot
+        Plotly.extendTraces('orientation_graph', {
+          r: [[1],[1],[1]],
+          theta: [[parseFloat(values[0])], [parseFloat(values[1])], [parseFloat(values[2])]],
+        },[0,1,2],10);
+        // orientation graph extension for 2d plot
+        Plotly.extendTraces("2d_orientation_graph", {
+          x: [[i],[i],[i]],
+          y: [[parseFloat(values[0])], [parseFloat(values[1])], [parseFloat(values[2])]],
+        },[0,1,2],10);
+        i++;
+
+
+        Plotly.extendTraces('position_graph', {
+          x: [[parseFloat(values[3])]],
+          y: [[parseFloat(values[4])]],
+          z: [[parseFloat(values[5])]]
+        }, [0]);
+      }
+
       function rand() {
         return Math.random();
       }
 
       <!-- mode: 'lines' for drawing line; mode: 'points' for drawing points -->
+      // orientation graph creation for scatterpolar
       Plotly.plot('orientation_graph', [{
-        type: 'scatter3d',
-        mode: 'points',
-        x: [1,2,3].map(rand),
-        y: [1,2,3].map(rand),
-        z: [1,2,3].map(rand),
+        type: 'scatterpolar',
+        mode: 'lines+markers',
+        r: [],
+        theta: [],
         opacity: 1,
-      }]);
+        subplot: "polar",
+      }, {
+        type: "scatterpolar",
+        mode: "lines+markers",
+        r: [],
+        theta: [],
+        opacity: 1,
+        subplot: "polar2",
+      }, {
+        type: "scatterpolar",
+        mode: "lines+markers",
+        r: [],
+        theta: [],
+        opacity: 1,
+        subplot: "polar3",
+      }], {
+        polar: {
+          domain: {
+            x: [0,0.3],
+            y: [0,1]
+          },
+          radialaxis: {
+            visible: false
+          }
+        },
+        polar2: {
+          domain: {
+            x: [0.33, 0.63],
+            y: [0,1]
+          },
+          radialaxis: {
+            visible: false
+          }
+        },
+        polar3: {
+          domain: {
+            x: [0.66, 1],
+            y: [0,1]
+          },
+          radialaxis: {
+            visible: false
+          }
+        },
+      });
 
-      var cnt = 0;
-
-      var interval = setInterval(function () {
-        Plotly.extendTraces('orientation_graph', {
-          x: [[Math.random()*100]],
-          y: [[Math.random()*100]],
-          z: [[Math.random()*100]]
-        }, [0], 10)
-        <!-- the last argument 10 is for the last 10 samples -->
-         if (cnt === 100) clearInterval(interval);
-      }, 500);
-      <!-- 500 is the time interval to update the graph -->
+      //
+      // var cnt = 0;
+      //
+      // var interval = setInterval(function () {
+      //   Plotly.extendTraces('orientation_graph', {
+      //     x: [[Math.random()*100]],
+      //     y: [[Math.random()*100]],
+      //     z: [[Math.random()*100]]
+      //   }, [0], 10)
+      //   <!-- the last argument 10 is for the last 10 samples -->
+      //    if (cnt === 100) clearInterval(interval);
+      // }, 500);
+      // <!-- 500 is the time interval to update the graph -->
       </script>
       <p>Sample plot only. </p>
+    </body>
+    <body>
+      <div id="2d_orientation_graph"> </div>
+      <script>
+      Plotly.plot("2d_orientation_graph", [{
+        type: "scatter",
+        mode: "lines+markers",
+        x: [0],
+        y: [0],
+        name: "yaw"
+      }, {
+        type: "scatter",
+        mode: "lines+markers",
+        x: [0],
+        y: [0],
+        name: "pitch"
+      }, {
+        type: "scatter",
+        mode: "lines+markers",
+        x: [0],
+        y: [0],
+        name: "roll"
+      }]);
+      </script>
     </body>
 
   </div>

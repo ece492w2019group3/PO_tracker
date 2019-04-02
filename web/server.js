@@ -39,7 +39,7 @@ app.get('/credits.html', function(req, res) {
 var serialName = process.argv[2];
 var parser = new Readline();
 var serialPort = new SerialPort(serialName, {
-  baudRate: 19200
+  baudRate: 115200
 });
 serialPort.pipe(parser);
 

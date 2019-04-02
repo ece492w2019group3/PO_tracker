@@ -214,7 +214,7 @@ body {
         Plotly.extendTraces("2d_orientation_graph", {
           x: [[i],[i],[i]],
           y: [[parseFloat(values[0])], [parseFloat(values[1])], [parseFloat(values[2])]],
-        },[0,1,2],10);
+        },[0,1,2],20);
         i++;
 
 
@@ -233,21 +233,21 @@ body {
       // orientation graph creation for scatterpolar
       Plotly.plot('orientation_graph', [{
         type: 'scatterpolar',
-        mode: 'lines+markers',
+        mode: 'markers',
         r: [],
         theta: [],
         opacity: 1,
         subplot: "polar",
       }, {
         type: "scatterpolar",
-        mode: "lines+markers",
+        mode: "markers",
         r: [],
         theta: [],
         opacity: 1,
         subplot: "polar2",
       }, {
         type: "scatterpolar",
-        mode: "lines+markers",
+        mode: "markers",
         r: [],
         theta: [],
         opacity: 1,
@@ -319,7 +319,9 @@ body {
         x: [0],
         y: [0],
         name: "roll"
-      }]);
+      }], {
+        yaxis: {range: [-180, 180]}
+      });
       </script>
     </body>
 

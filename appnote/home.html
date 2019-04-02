@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>PO Tracker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Style the body */
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+  }
+
+  /* Increase the font size of the heading */
+  .header h1 {
+    font-size: 40px;
+  }
+
+  /* Style the navigation bar links */
+  .navbar a {
+    float: left;
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 20px;
+    text-decoration: none;
+  }
+
+
+  /* Right-aligned link */
+  .navbar a.right {
+    float: right;
+  }
+
+  /* Change color on hover */
+  .navbar a:hover {
+    background-color: #ddd;
+    color: black;
+  }
+
+  /* Active/current link */
+  .navbar a.active {
+    background-color: #666;
+    color: white;
+  }
+
+  /* Column container */
+  .row {
+    display: -ms-flexbox; /* IE10 */
+    display: flex;
+    -ms-flex-wrap: wrap; /* IE10 */
+    flex-wrap: wrap;
+  }
+
+
+  /* Main column */
+  .main {
+    -ms-flex: 70%; /* IE10 */
+    flex: 70%;
+    background-color: white;
+    padding: 20px;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 20px;
+    text-align: center;
+    background: #ddd;
+  }
+
+  /* Responsive layout - when the screen is less than 700px wide, make the two columns stack on top of each other instead of next to each other */
+  @media screen and (max-width: 700px) {
+    .row {
+      flex-direction: column;
+    }
+  }
+
+  /* Responsive layout - when the screen is less than 400px wide, make the navigation links stack on top of each other instead of next to each other */
+  @media screen and (max-width: 400px) {
+    .navbar a {
+      float: none;
+      width: 100%;
+    }
+  }
+  </style>
+<div class="header"></div>
+<div class="navbar"></div>
+<div class="row">
+    <div class="main">
+    <body>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <div id="graph" ><!-- Plotly chart will be drawn inside this DIV --></div>
+      <script>
+      // websocket communication code from https://github.com/ITPNYU/physcomp/tree/master/labs2014/Node%20Serial%20Lab
+      // connects to localhost, change url if server is run on a proper server.
+      var socket = new WebSocket("ws://localhost:8080");
+      var text;
+      setup();
+
+      //  set functions to execute when socket is opened
+      //  and when data is received (onmessage)
+      function setup() {
+        socket.onopen = openSocket;
+        socket.onmessage = showData;
+      }
+
+      function openSocket() {
+        //  can perform initializations related to socket here
+      }
+
+      //  showData receives data from the socket as result
+      //  should be used to display the data on the screen
+      function showData(result) {
+        //  split and extracted with expected positions
+        var values = result.data.split(' ');
+        if (values.length < 3) {
+          // ignore if not enough values
+          return;
+        }
+        var name = values[0];
+        var x = parseInt(values[1]);
+        var y = parseFloat(values[2]);
+
+        Plotly.extendTraces("graph", {
+          x: [[x]],
+          y: [[y]],
+          text: [[name]],
+        },[0],20);
+      }
+
+      var trace1 = {
+        x: [0],
+        y: [0],
+        text: ['zero'],
+        mode: 'markers+text',
+        type: 'scatter'
+      };
+
+      var layout = {
+        autosize: true,
+        height: 700
+      }
+
+      Plotly.plot('graph', [trace1], layout);
+      </script>
+    </body>
+  </div>
+</head>
+</div>
+</html>

@@ -147,9 +147,8 @@ body {
       <!-- from https://plot.ly/javascript/setting-graph-size/ -->
       var layout = {
         title: 'Position',
-        autosize: false,
-        height: 700,
-        width: 1640
+        autosize: true,
+        height: 700
       }
 
       Plotly.plot('position_graph', [trace1], layout);
@@ -186,11 +185,14 @@ body {
 
       function showData(result) {
         var values = result.data.split(',');
+        for (i in values) {
+          values[i] = (360 + values[i]) % 360;
+        }
         // orientation graph extension for polar plot
-        Plotly.extendTraces('orientation_graph', {
-          r: [[1],[1],[1]],
-          theta: [[parseFloat(values[0])], [parseFloat(values[1])], [parseFloat(values[2])]],
-        },[0,1,2],10);
+        // Plotly.extendTraces('orientation_graph', {
+        //   r: [[1],[1],[1]],
+        //   theta: [[parseFloat(values[0])], [parseFloat(values[1])], [parseFloat(values[2])]],
+        // },[0,1,2],10);
         // orientation graph extension for 2d plot
         Plotly.extendTraces("2d_orientation_graph", {
           x: [[i],[i],[i]],
@@ -207,59 +209,59 @@ body {
 
       <!-- mode: 'lines' for drawing line; mode: 'points' for drawing points -->
       // orientation graph creation for scatterpolar
-      Plotly.plot('orientation_graph', [{
-        type: 'scatterpolar',
-        mode: 'markers',
-        r: [],
-        theta: [],
-        opacity: 1,
-        subplot: "polar",
-      }, {
-        type: "scatterpolar",
-        mode: "markers",
-        r: [],
-        theta: [],
-        opacity: 1,
-        subplot: "polar2",
-      }, {
-        type: "scatterpolar",
-        mode: "markers",
-        r: [],
-        theta: [],
-        opacity: 1,
-        subplot: "polar3",
-      }], {
-        polar: {
-          domain: {
-            x: [0,0.3],
-            y: [0,1],
-            name: "yaw"
-          },
-          radialaxis: {
-            visible: false
-          }
-        },
-        polar2: {
-          domain: {
-            x: [0.33, 0.63],
-            y: [0,1],
-            name: "pitch"
-          },
-          radialaxis: {
-            visible: false
-          }
-        },
-        polar3: {
-          domain: {
-            x: [0.66, 1],
-            y: [0,1],
-            name: "roll"
-          },
-          radialaxis: {
-            visible: false
-          }
-        },
-      });
+      // Plotly.plot('orientation_graph', [{
+      //   type: 'scatterpolar',
+      //   mode: 'markers',
+      //   r: [],
+      //   theta: [],
+      //   opacity: 1,
+      //   subplot: "polar",
+      // }, {
+      //   type: "scatterpolar",
+      //   mode: "markers",
+      //   r: [],
+      //   theta: [],
+      //   opacity: 1,
+      //   subplot: "polar2",
+      // }, {
+      //   type: "scatterpolar",
+      //   mode: "markers",
+      //   r: [],
+      //   theta: [],
+      //   opacity: 1,
+      //   subplot: "polar3",
+      // }], {
+      //   polar: {
+      //     domain: {
+      //       x: [0,0.3],
+      //       y: [0,1],
+      //       name: "yaw"
+      //     },
+      //     radialaxis: {
+      //       visible: false
+      //     }
+      //   },
+      //   polar2: {
+      //     domain: {
+      //       x: [0.33, 0.63],
+      //       y: [0,1],
+      //       name: "pitch"
+      //     },
+      //     radialaxis: {
+      //       visible: false
+      //     }
+      //   },
+      //   polar3: {
+      //     domain: {
+      //       x: [0.66, 1],
+      //       y: [0,1],
+      //       name: "roll"
+      //     },
+      //     radialaxis: {
+      //       visible: false
+      //     }
+      //   },
+      // });
       </script>
 
     </body>
@@ -285,7 +287,10 @@ body {
         y: [0],
         name: "roll"
       }], {
-        yaxis: {range: [-180, 180]}
+        yaxis: {range: [0, 360]},
+        yaxis2: {
+          range: [0,360]
+        }
       });
       </script>
     </body>

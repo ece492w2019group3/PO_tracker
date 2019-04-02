@@ -82,13 +82,6 @@ body {
   padding: 20px;
 }
 
-/* Fake image, just for this example */
-.fakeimg {
-  background-color: #aaa;
-  width: 100%;
-  padding: 20px;
-}
-
 /* Footer */
 .footer {
   padding: 20px;
@@ -151,32 +144,20 @@ body {
         mode: 'lines',
         type: 'scatter3d'
       };
-
+      <!-- from https://plot.ly/javascript/setting-graph-size/ -->
       var layout = {
-        title: 'Position'
+        title: 'Position',
+        autosize: false,
+        height: 700,
+        width: 1640
       }
 
       Plotly.plot('position_graph', [trace1], layout);
-
-      // var cnt = 0;
-      // var interval = setInterval(function() {
-      //
-      //   Plotly.extendTraces('position_graph', {
-      //     x: [[rand()]],
-      //     y: [[rand()]],
-      //     z: [[rand()]]
-      //   }, [0])
-      //
-      //   if(cnt === 100) clearInterval(interval);
-      // }, 300);
       </script>
     </body>
 
 
-    <p>Real time plot showing the position in space.</p>
-    <h3>Orientation Graph</h3>
-
-
+    <h2>Orientation Graph</h2>
     <head>
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -217,16 +198,11 @@ body {
         },[0,1,2],20);
         i++;
 
-
         Plotly.extendTraces('position_graph', {
           x: [[parseFloat(values[3])]],
           y: [[parseFloat(values[4])]],
           z: [[parseFloat(values[5])]]
         }, [0]);
-      }
-
-      function rand() {
-        return Math.random();
       }
 
       <!-- mode: 'lines' for drawing line; mode: 'points' for drawing points -->
@@ -256,7 +232,8 @@ body {
         polar: {
           domain: {
             x: [0,0.3],
-            y: [0,1]
+            y: [0,1],
+            name: "yaw"
           },
           radialaxis: {
             visible: false
@@ -265,7 +242,8 @@ body {
         polar2: {
           domain: {
             x: [0.33, 0.63],
-            y: [0,1]
+            y: [0,1],
+            name: "pitch"
           },
           radialaxis: {
             visible: false
@@ -274,29 +252,16 @@ body {
         polar3: {
           domain: {
             x: [0.66, 1],
-            y: [0,1]
+            y: [0,1],
+            name: "roll"
           },
           radialaxis: {
             visible: false
           }
         },
       });
-
-      //
-      // var cnt = 0;
-      //
-      // var interval = setInterval(function () {
-      //   Plotly.extendTraces('orientation_graph', {
-      //     x: [[Math.random()*100]],
-      //     y: [[Math.random()*100]],
-      //     z: [[Math.random()*100]]
-      //   }, [0], 10)
-      //   <!-- the last argument 10 is for the last 10 samples -->
-      //    if (cnt === 100) clearInterval(interval);
-      // }, 500);
-      // <!-- 500 is the time interval to update the graph -->
       </script>
-      <p>Sample plot only. </p>
+
     </body>
     <body>
       <div id="2d_orientation_graph"> </div>
@@ -324,7 +289,6 @@ body {
       });
       </script>
     </body>
-
   </div>
 </div>
 

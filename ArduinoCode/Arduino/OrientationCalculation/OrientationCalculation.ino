@@ -61,9 +61,6 @@ extern "C"{
 #include <trajectory_tool_terminate.h>
 #include <trajectory_tool_initialize.h>
 #include <getQuaternion.h>
-#include <RealTimeFilter1_terminate.h>
-#include <RealTimeFilter1_initialize.h>
-#include <RealTimeFilter1.h>
 }
 
 //////////////////////////
@@ -85,7 +82,7 @@ LSM9DS1 imu;
 ////////////////////////////
 #define PRINT_CALCULATED
 //#define PRINT_RAW
-#define PRINT_SPEED 20 // 250 ms between prints
+#define PRINT_SPEED 500 // 250 ms between prints
 static unsigned long lastPrint = 0; // Keep track of print time
 double g_xyz[3];
 double a_xyz[3];
@@ -402,9 +399,9 @@ static void main_kal_tool(const double acc[3],
     acc_tmp[1] = 0;
     acc_tmp[3] = 0;
     acc_tmp[5] = 0;
-    prev_position_tmp[0]=0;
-    prev_position_tmp[1]=0;
-    prev_position_tmp[2]=0;
+//    prev_position_tmp[0]=0;
+//    prev_position_tmp[1]=0;
+//    prev_position_tmp[2]=0;
   }
 //  Serial.println(acc_magnitude,2);
   ang_vel_tmp[1] = angularvelocity[0];
@@ -444,7 +441,7 @@ static void main_kal_tool(const double acc[3],
 //  gravy = alpha * gravy + (1 - alpha) * acc[1];
 //  gravz = alpha * gravz + (1 - alpha) * acc[2];
 //  
-  if (acc_magnitude < 0.3) {
+  if (acc_magnitude < 0.12) {
     prev_velocity_tmp[0] = 0;
     prev_velocity_tmp[1] = 0;
     prev_velocity_tmp[2] = 0;

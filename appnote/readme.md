@@ -4,18 +4,20 @@ Example and tutorial on serial communication with Node.js and plotting data to
 a browser. For this example, an Arduino mega 2560 was used as the serial input
 of the node server, but any serial input should be usable.
 Requirements: - Arduino device (but a different device connected serially could be used with the right output format)
-              - computer with ability to install Node.js
+              - Computer compatible with Node.js
 
 Instructions:
-1) Install Node.js (https://nodejs.org/en/) This was a simple installation for me
+1) Install Node.js (https://nodejs.org/en/) Windows or macOS installers provided
 2) Clone the contents of this appnote.
 3) In the terminal, navigate to the folder with server.js
 We must now install the node dependencies to run server.js
 4) In the terminal, run the following commands (Working directory same as server.js):
 
-``npm install express
+```
+npm install express
 npm install serialport
-npm install ws``
+npm install ws
+```
 
 Steps 5-9 are for using the Arduino example code. If you wish to use a different
 board, you will need to create code for that device which performs similarly to
@@ -44,7 +46,7 @@ the program. One of these should be the serial device you want to read.
 
 ``node ./server.js  /dev/tty.usbmodemXXXX``
 
-Above is the format that the current (April 5th 2019) OS X system displays usb connections,
+Above is the format that the current (April 5th 2019) macOS system displays usb connections,
 with XXXX being replaced with a 4 digit number.
 
 13) The terminal should display lines similar to what was observed in step 9) if

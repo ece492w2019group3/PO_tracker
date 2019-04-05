@@ -1,16 +1,12 @@
-
-
 /*****************************************************************
 LSM9DS1_Basic_I2C.ino
 SFE_LSM9DS1 Library Simple Example Code - I2C Interface
 Jim Lindblom @ SparkFun Electronics
 Original Creation Date: April 30, 2015
 https://github.com/sparkfun/LSM9DS1_Breakout
-
 The LSM9DS1 is a versatile 9DOF sensor. It has a built-in
 accelerometer, gyroscope, and magnetometer. Very cool! Plus it
 functions over either SPI or I2C.
-
 This Arduino sketch is a demo of the simple side of the
 SFE_LSM9DS1 library. It'll demo the following:
 * How to create a LSM9DS1 object, using a constructor (global
@@ -24,7 +20,6 @@ SFE_LSM9DS1 library. It'll demo the following:
   and calcMag() functions.
 * How to use the data from the LSM9DS1 to calculate 
   orientation and heading.
-
 Hardware setup: This library supports communicating with the
 LSM9DS1 over either I2C or SPI. This example demonstrates how
 to use I2C. The pin-out is as follows:
@@ -35,21 +30,17 @@ to use I2C. The pin-out is as follows:
    GND ------------- GND
 (CSG, CSXM, SDOG, and SDOXM should all be pulled high. 
 Jumpers on the breakout board will do this for you.)
-
 The LSM9DS1 has a maximum voltage of 3.6V. Make sure you power it
 off the 3.3V rail! I2C pins are open-drain, so you'll be 
 (mostly) safe connecting the LSM9DS1's SCL and SDA pins 
 directly to the Arduino.
-
 Development environment specifics:
   IDE: Arduino 1.6.3
   Hardware Platform: SparkFun Redboard
   LSM9DS1 Breakout Version: 1.0
-
 This code is beerware. If you see me (or any other SparkFun 
 employee) at the local, and you've found our code helpful, 
 please buy us a round!
-
 Distributed as-is; no warranty is given.
 *****************************************************************/
 // The SFE_LSM9DS1 library requires both Wire and SPI be
@@ -70,9 +61,9 @@ extern "C"{
 #include <trajectory_tool_terminate.h>
 #include <trajectory_tool_initialize.h>
 #include <getQuaternion.h>
-#include <RealTimeFilter_terminate.h>
-#include <RealTimeFilter_initialize.h>
-#include <RealTimeFilter.h>
+#include <RealTimeFilter1_terminate.h>
+#include <RealTimeFilter1_initialize.h>
+#include <RealTimeFilter1.h>
 }
 
 //////////////////////////
@@ -113,17 +104,14 @@ double gravz = 0;
 double gravOffset[3];
 double alpha = 0.8;
 int duration = 1000;
-int fs = 50;
+int fs = 30;
 int N = 10000;
-//static double acc_x[2];
-//static double acc_y[2];
-//static double acc_z[2];
-//static double dv0_x[120];
-//static double dv0_y[120];
-//static double dv0_z[120];
-//static double z_x[120];
-//static double z_y[120];
-//static double z_z[120];
+
+static double mag_norm[2];
+
+static double dv0[120];
+
+static double z[120];
 
 // Earth's magnetic field varies by location. Add or subtract 
 // a declination to get a more accurate heading. Calculate 
@@ -135,7 +123,7 @@ void setup()
 {
   
   Serial.begin(115200);
-  RealTimeFilter_initialize();
+//  RealTimeFilter_initialize();
   kal_tool_initialize();
   trajectory_tool_initialize();
   // Before initializing the IMU, there are a few settings
@@ -189,12 +177,10 @@ void setup()
   gravOffset[0] = 0;
   gravOffset[1] = 0;
   gravOffset[2] = 0; 
-//  argInit_120x1_real_T(dv0_x);
-//  argInit_120x1_real_T(dv0_y);
-//  argInit_120x1_real_T(dv0_z);
-//  argInit_120x1_real_T(z_x); 
-//  argInit_120x1_real_T(z_y);
-//  argInit_120x1_real_T(z_z);
+//  argInit_120x1_real_T(dv0);
+
+//  argInit_120x1_real_T(z); 
+
 //  acc_x[0]=0.0;
 //  acc_y[0]=0.0;
 //  acc_z[0]=0.0;
@@ -412,12 +398,15 @@ static void main_kal_tool(const double acc[3],
   acc_tmp[3] = acc[1] - gravy*g - gravOffset[1];
   acc_tmp[5] = acc[2] - gravz*g - gravOffset[2];
   acc_magnitude = sqrt(acc_tmp[1]*acc_tmp[1] + acc_tmp[3]*acc_tmp[3] + acc_tmp[5]*acc_tmp[5]);
-  if (acc_magnitude < 0.3) {
+  if (acc_magnitude < 0.12) {
     acc_tmp[1] = 0;
     acc_tmp[3] = 0;
     acc_tmp[5] = 0;
+    prev_position_tmp[0]=0;
+    prev_position_tmp[1]=0;
+    prev_position_tmp[2]=0;
   }
-  
+//  Serial.println(acc_magnitude,2);
   ang_vel_tmp[1] = angularvelocity[0];
   ang_vel_tmp[3] = angularvelocity[1];
   ang_vel_tmp[5] = angularvelocity[2];
@@ -491,19 +480,19 @@ static void main_kal_tool(const double acc[3],
   Serial.print(",");
   Serial.println(cur_position[2]*1000, 2); 
 //  Serial.print("V: ");
-  Serial.print(prev_velocity_tmp[0]*1000, 2);
-  Serial.print(",");
-  Serial.print(prev_velocity_tmp[1]*1000, 2);
-  Serial.print(",");
-  Serial.println(prev_velocity_tmp[2]*1000, 2); 
+//  Serial.print(prev_velocity_tmp[0]*1000, 2);
+//  Serial.print(",");
+//  Serial.print(prev_velocity_tmp[1]*1000, 2);
+//  Serial.print(",");
+//  Serial.println(prev_velocity_tmp[2]*1000, 2); 
 
 //  Serial.print("A: ");
-  Serial.print(acc_tmp[1], 2);
-  Serial.print(",");
-  Serial.print(acc_tmp[3], 2);
-  Serial.print(",");
-  Serial.println(acc_tmp[5], 2); 
-  Serial.println(acc_magnitude, 2); 
+//  Serial.print(acc_tmp[1], 2);
+//  Serial.print(",");
+//  Serial.print(acc_tmp[3], 2);
+//  Serial.print(",");
+//  Serial.println(acc_tmp[5], 2); 
+//  Serial.println(acc_magnitude, 2); 
 //  Serial.print(",");
 //  Serial.print(acc[0], 2);
 //  Serial.print(",");
@@ -517,111 +506,4 @@ static void main_kal_tool(const double acc[3],
 //  Serial.print(",");
 //  Serial.print(mag[2], 2); 
 //  Serial.println(",");
-}
-static void gravOffsetRoll(double roll) {
-   if (roll > -170 && roll<-160){
-    gravOffset[0] = 0.01;
-    gravOffset[1] = 0.02;
-    gravOffset[2] = -0.14; 
- }
- else if (roll > -160 && roll<-150){
-    gravOffset[0] = 0.01;
-    gravOffset[1] = 0.04;
-    gravOffset[2] = -0.13; 
- }
- else if (roll > -150 && roll<-140){
-    gravOffset[0] = 0.01;
-    gravOffset[1] = 0.06;
-    gravOffset[2] = -0.12; 
- }
- else if (roll > -140 && roll<-130){
-    gravOffset[0] = 0;
-    gravOffset[1] = 0.08;
-    gravOffset[2] = -0.1; 
- }
- else if (roll > -130 && roll<-120){
-    gravOffset[0] = 0;
-    gravOffset[1] = 0.1;
-    gravOffset[2] = -0.08; 
-//    Serial.println("hello");
- }
- if (roll > 120 && roll<130){
-    gravOffset[0] = 0;
-    gravOffset[1] = 0.07;
-    gravOffset[2] = -0.04; 
- }
- else if (roll > 130 && roll<140){
-    gravOffset[0] = 0;
-    gravOffset[1] = 0.07;
-    gravOffset[2] = -0.05; 
- }
- else if (roll > 140 && roll<150){
-    gravOffset[0] = 0;
-    gravOffset[1] = 0.06;
-    gravOffset[2] = -0.05; 
- }
- else if (roll > 150 && roll<160){
-    gravOffset[0] = 0;
-    gravOffset[1] = 0.05;
-    gravOffset[2] = -0.06; 
- }
- else if (roll > 160 && roll<170){
-    gravOffset[0] = 0;
-    gravOffset[1] = 0.03;
-    gravOffset[2] = -0.08; 
- }
- else if (roll > 170 && roll<180){
-    gravOffset[0] = 0;
-    gravOffset[1] = 0.02;
-    gravOffset[2] = -0.1; 
- }
-}
-
-static void lowPass(double x[2], double result[120], double input[1200]){
-     RealTimeFilter(x, 2, input, result);
-     swapZ(input, result);  
- }
-static void swapZ(double result[120], double input[120])
-{
-  int idx0;
-
-  /* Loop over the array to initialize each element. */
-  for (idx0 = 0; idx0 < 120; idx0++) {
-    /* Set the value of the array element.
-       Change this value to the value that the application requires. */
-    result[idx0] = input[idx0];
-  }
-}
-
-static double argInit_real_T(void)
-{
-  return 0.0;
-}
-
-static void argInit_120x1_real_T(double result[120])
-{
-  int idx0;
-
-  /* Loop over the array to initialize each element. */
-  for (idx0 = 0; idx0 < 120; idx0++) {
-    /* Set the value of the array element.
-       Change this value to the value that the application requires. */
-    result[idx0] = argInit_real_T();
-  }
-}
-
-static void argInit_d2x1_real_T(double result_data[], int result_size[1])
-{
-  int idx0;
-
-  /* Set the size of the array.
-     Change this size to the value that the application requires. */
-  result_size[0] = 2;
-
-  /* Loop over the array to initialize each element. */
-  for (idx0 = 0; idx0 < 2; idx0++) {
-    /* Set the value of the array element.
-       Change this value to the value that the application requires. */
-    result_data[idx0] = argInit_real_T();
-  }
 }

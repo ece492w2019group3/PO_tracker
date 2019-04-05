@@ -57,6 +57,7 @@ Distributed as-is; no warranty is given.
 #include <Wire.h>
 #include <SPI.h>
 #include <SparkFunLSM9DS1.h>
+#include <math.h>
 extern "C"{
 #include <rtwtypes.h>
 #include <kal_tool_types.h>
@@ -69,6 +70,9 @@ extern "C"{
 #include <trajectory_tool_terminate.h>
 #include <trajectory_tool_initialize.h>
 #include <getQuaternion.h>
+#include <RealTimeFilter_terminate.h>
+#include <RealTimeFilter_initialize.h>
+#include <RealTimeFilter.h>
 }
 
 //////////////////////////
@@ -90,7 +94,7 @@ LSM9DS1 imu;
 ////////////////////////////
 #define PRINT_CALCULATED
 //#define PRINT_RAW
-#define PRINT_SPEED 500 // 250 ms between prints
+#define PRINT_SPEED 20 // 250 ms between prints
 static unsigned long lastPrint = 0; // Keep track of print time
 double g_xyz[3];
 double a_xyz[3];
@@ -102,19 +106,25 @@ double prev_velocity_tmp[3];
 c_matlabshared_rotations_intern prev_orientation = {1, 0, 0, 0};
 d_matlabshared_rotations_intern orient;
 c_matlabshared_rotations_intern pitchRotation = {1, 0, 0, 0};
-const double g = 9.81;
+const double g = 9.80;
 double gravx = 0; 
 double gravy = 0;
 double gravz = 0;
+double gravOffset[3];
 double alpha = 0.8;
 int duration = 1000;
-int fs = 19200;
+int fs = 50;
 int N = 10000;
-int radius = 5000;
-int spd = 80;
-int climbRate = 50;
-int initialYaw = 0;
-int pitch = 15;
+//static double acc_x[2];
+//static double acc_y[2];
+//static double acc_z[2];
+//static double dv0_x[120];
+//static double dv0_y[120];
+//static double dv0_z[120];
+//static double z_x[120];
+//static double z_y[120];
+//static double z_z[120];
+
 // Earth's magnetic field varies by location. Add or subtract 
 // a declination to get a more accurate heading. Calculate 
 // your's here:
@@ -124,7 +134,8 @@ int pitch = 15;
 void setup() 
 {
   
-  Serial.begin(19200);
+  Serial.begin(115200);
+  RealTimeFilter_initialize();
   kal_tool_initialize();
   trajectory_tool_initialize();
   // Before initializing the IMU, there are a few settings
@@ -137,25 +148,7 @@ void setup()
   // The above lines will only take effect AFTER calling
   // imu.begin(), which verifies communication with the IMU
   // and turns it on.
-  Serial.println("calibration started");
-  imu.calibrate(1);
-  imu.calibrateMag(1);
-  Serial.println("Calibration fininshed");  if ( imu.accelAvailable() )
-  {
-  // To read from the accelerometer, first call the
-  // readAccel() function. When it exits, it'll update the
-  // ax, ay, and az variables with the most current data.
-  imu.readAccel();
-  }
-  acc_tmp[0] = imu.calcAccel(imu.ax);
-  acc_tmp[2] = imu.calcAccel(imu.ay);
-  acc_tmp[4] = imu.calcAccel(imu.az);
-  ang_vel_tmp[0] = 0;
-  ang_vel_tmp[2] = 0;
-  ang_vel_tmp[4] = 0;
-  
-  getQuaternion(initialYaw, pitch, 0, &prev_orientation);
-  getQuaternion(0, pitch, 0, &pitchRotation);
+
   if (!imu.begin())
   {
     Serial.println("Failed to communicate with LSM9DS1.");
@@ -167,6 +160,45 @@ void setup()
     while (1)
       ;
   }
+//  Serial.println("accel and gyro calibration start");
+//  imu.calibrate(1);
+//  Serial.println("accel and gyro calibration finished");
+
+  Serial.println("magnetometer calibration started");
+  imu.calibrateMag(1);
+  Serial.println("magnetometer Calibration fininshed");  
+  if ( imu.accelAvailable() )
+  {
+  // To read from the accelerometer, first call the
+  // readAccel() function. When it exits, it'll update the
+  // ax, ay, and az variables with the most current data.
+    imu.readAccel();
+  }
+  acc_tmp[0] = imu.calcAccel(imu.ax);
+  acc_tmp[2] = imu.calcAccel(imu.ay);
+  acc_tmp[4] = imu.calcAccel(imu.az);
+  prev_position_tmp[0] = 0;
+  prev_position_tmp[1] = 0;
+  prev_position_tmp[2] = 0;
+  prev_velocity_tmp[0] = 0;
+  prev_velocity_tmp[1] = 0;
+  prev_velocity_tmp[2] = 0;
+  ang_vel_tmp[0] = 0;
+  ang_vel_tmp[2] = 0;
+  ang_vel_tmp[4] = 0;
+  gravOffset[0] = 0;
+  gravOffset[1] = 0;
+  gravOffset[2] = 0; 
+//  argInit_120x1_real_T(dv0_x);
+//  argInit_120x1_real_T(dv0_y);
+//  argInit_120x1_real_T(dv0_z);
+//  argInit_120x1_real_T(z_x); 
+//  argInit_120x1_real_T(z_y);
+//  argInit_120x1_real_T(z_z);
+//  acc_x[0]=0.0;
+//  acc_y[0]=0.0;
+//  acc_z[0]=0.0;
+  getQuaternion(0, 0, 0, &prev_orientation);
 }
 
 void loop()
@@ -198,34 +230,23 @@ void loop()
   {
 //     printGyro();  // Print "G: gx, gy, gz"
 //     printAccel(); // Print "A: ax, ay, az"
-     printMag();   // Print "M: mx, my, mz"
+//     printMag();   // Print "M: mx, my, mz"
     // Print the heading and orientation for fun!
     // Call print attitude. The LSM9DS1's mag x and y
     // axes are opposite to the accelerometer, so my, mx are
     // substituted for each other.
 //     printAttitude(imu.ax, imu.ay, imu.az, 
 //                  -imu.my, -imu.mx, imu.mz);
-    g_xyz[0] = imu.calcGyro(imu.gx);
-    g_xyz[1] = imu.calcGyro(imu.gy);
-    g_xyz[2] = imu.calcGyro(imu.gz);
+    g_xyz[0] = imu.calcGyro(imu.gx) * 0.0174533;
+    g_xyz[1] = imu.calcGyro(imu.gy) * 0.0174533;
+    g_xyz[2] = imu.calcGyro(imu.gz) * 0.0174533;
     a_xyz[0] = imu.calcAccel(imu.ax) * g;
     a_xyz[1] = imu.calcAccel(imu.ay) * g;
     a_xyz[2] = imu.calcAccel(imu.az) * g;
-    m_xyz[0] = imu.calcMag(imu.mx);
-    m_xyz[1] = imu.calcMag(imu.my);
-    m_xyz[2] = imu.calcMag(imu.mz); 
+    m_xyz[0] = imu.calcMag(imu.mx) * 100;
+    m_xyz[1] = imu.calcMag(imu.my) * 100;
+    m_xyz[2] = imu.calcMag(imu.mz) * 100; 
 
-//    float Xm_off, Ym_off, Zm_off, Xm_cal, Ym_cal, Zm_cal;
-//    Xm_off = imu.mx * (100000.0/1100.0) - 633.965205;
-//    Ym_off = imu.my * (100000.0/1100.0) - 648.920686;
-//    Zm_off = imu.mz *(100000.0/980.0 ) - 772.416502; //Z-axis combined bias
-//  
-//    Xm_cal =  0.073027*Xm_off + 0.000090*Ym_off - 0.010024*Zm_off; //X-axis correction for combined scale factors (Default: positive factors)
-//    Ym_cal =  0.000090*Xm_off + 0.071566*Ym_off - 0.003085*Zm_off; //Y-axis correction for combined scale factors
-//    Zm_cal =  -0.010024*Xm_off - 0.003085*Ym_off + 0.050004*Zm_off; //Z-axis correction for combined scale factors
-//    m_xyz[0] = Xm_cal;
-//    m_xyz[1] = Ym_cal;
-//    m_xyz[2] = Zm_cal; 
     main_kal_tool(a_xyz, g_xyz, m_xyz, acc_tmp, ang_vel_tmp, prev_position_tmp, prev_velocity_tmp, prev_orientation, orient, pitchRotation);
 //    Serial.println();
     
@@ -347,7 +368,7 @@ void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
 }
 
 static void main_kal_tool(const double acc[3], 
-        const double gyro[3], const double mag[3], double acc_tmp[6], double ang_vel_tmp[6], 
+        const double gyr[3], const double mg[3], double acc_tmp[6], double ang_vel_tmp[6], 
         double prev_position_tmp[3], double prev_velocity_tmp[3], 
         c_matlabshared_rotations_intern prev_orientation, 
         d_matlabshared_rotations_intern orient, 
@@ -360,49 +381,91 @@ static void main_kal_tool(const double acc[3],
   static double velocity[6];
   static double acceleration[6];
   static double angularVelocity[6];
+  static double acc_filtered[3];
+  float acc_magnitude;
 
-  kal_tool(acc, gyro, mag, orientationEuler_kal, angularvelocity);
-  gravx = alpha * gravx + (1 - alpha) * acc[0];
-  gravy = alpha * gravy + (1 - alpha) * acc[1];
-  gravz = alpha * gravz + (1 - alpha) * acc[2];
-  acc_tmp[1] = acc[0] - g*gravx;
-  acc_tmp[3] = acc[1] - g*gravy;
-  acc_tmp[5] = acc[2] - g*gravz;
+//  acc_x[1] = acc[0];
+//  acc_y[1] = acc[1];
+//  acc_z[1] = acc[2];
+//  Serial.println("Hello");
+//
+//  lowPass(acc_x, z_x, dv0_x);
+//  lowPass(acc_y, z_y, dv0_y);
+//  lowPass(acc_z, z_z, dv0_z);
+//  Serial.println("It's me");
+
+//  acc_x[0] = acc[0];
+//  acc_y[0] = acc[1];;
+//  acc_z[0] = acc[2];
+//  acc[0] = acc_x[1];
+//  acc_filtered[1] = acc_y[1];
+//  acc_filtered[2] = acc_z[1];
+  
+    
+  kal_tool(acc, gyr, mg, orientationEuler_kal, angularvelocity);
+  getQuaternion(orientationEuler_kal[0], orientationEuler_kal[1], orientationEuler_kal[2], &prev_orientation);
+//  gravOffsetRoll(orientationEuler_kal[2]);
+  gravx = 2 * (prev_orientation.b*prev_orientation.d - prev_orientation.a*prev_orientation.c);
+  gravy = 2 * (prev_orientation.a*prev_orientation.b + prev_orientation.c*prev_orientation.d);
+  gravz = prev_orientation.a*prev_orientation.a - prev_orientation.b*prev_orientation.b - prev_orientation.c*prev_orientation.c + prev_orientation.d*prev_orientation.d;
+  acc_tmp[1] = acc[0] - gravx*g - gravOffset[0];
+  acc_tmp[3] = acc[1] - gravy*g - gravOffset[1];
+  acc_tmp[5] = acc[2] - gravz*g - gravOffset[2];
+  acc_magnitude = sqrt(acc_tmp[1]*acc_tmp[1] + acc_tmp[3]*acc_tmp[3] + acc_tmp[5]*acc_tmp[5]);
+  if (acc_magnitude < 0.3) {
+    acc_tmp[1] = 0;
+    acc_tmp[3] = 0;
+    acc_tmp[5] = 0;
+  }
+  
   ang_vel_tmp[1] = angularvelocity[0];
   ang_vel_tmp[3] = angularvelocity[1];
   ang_vel_tmp[5] = angularvelocity[2];
+//  Serial.print("A: ");
 //  Serial.print(acc_tmp[1], 2);
 //  Serial.print(",");
 //  Serial.print(acc_tmp[3], 2);
 //  Serial.print(",");
-//  Serial.println(acc_tmp[5], 2); 
-
+//  Serial.print(acc_tmp[5], 2); 
+//  Serial.print(","); 
+//
   trajectory_tool(acc_tmp, ang_vel_tmp,
                   prev_position_tmp, prev_orientation, prev_velocity_tmp, fs, cur_position, &orient, velocity,
                   acceleration, angularVelocity);
+//  velocity[1] = prev_velocity_tmp[0] + acc_tmp[1] * fs / 2.0;
+//  velocity[3] = prev_velocity_tmp[1] + acc_tmp[3] * fs / 2.0;
+//  velocity[5] = prev_velocity_tmp[2] + acc_tmp[5] * fs / 2.0;
+//  cur_position[0] = prev_position_tmp[0] + velocity[1] * fs / 2.0;
+//  cur_position[1] = prev_position_tmp[1] + velocity[3] * fs / 2.0;
+//  cur_position[2] = prev_position_tmp[2] + velocity[5] * fs / 2.0;
+
   acc_tmp[0] = acc_tmp[1];
   acc_tmp[2] = acc_tmp[3];
   acc_tmp[4] = acc_tmp[5];
   prev_position_tmp[0] = cur_position[0];
   prev_position_tmp[1] = cur_position[1];
   prev_position_tmp[2] = cur_position[2];
-
-  prev_orientation.a = orient.a[1];
-  prev_orientation.b = orient.b[1];
-  prev_orientation.c = orient.c[1];
-  prev_orientation.d = orient.d[1];
+//
+//  prev_orientation.a = orient.a[1];
+//  prev_orientation.b = orient.b[1];
+//  prev_orientation.c = orient.c[1];
+//  prev_orientation.d = orient.d[1];
   
-//  gravx = 2 * (prev_orientation.b*prev_orientation.d - prev_orientation.a*prev_orientation.c);
-//  gravy = 2 * (prev_orientation.a*prev_orientation.b + prev_orientation.c*prev_orientation.d);
-//  gravz = prev_orientation.a*prev_orientation.a - prev_orientation.b*prev_orientation.b - prev_orientation.c*prev_orientation.c + prev_orientation.d*prev_orientation.d;
-
-  gravx = alpha * gravx + (1 - alpha) * acc[0];
-  gravy = alpha * gravy + (1 - alpha) * acc[1];
-  gravz = alpha * gravz + (1 - alpha) * acc[2];
+//  gravx = alpha * gravx + (1 - alpha) * acc[0];
+//  gravy = alpha * gravy + (1 - alpha) * acc[1];
+//  gravz = alpha * gravz + (1 - alpha) * acc[2];
 //  
-  prev_velocity_tmp[0] = velocity[1];
-  prev_velocity_tmp[1] = velocity[3];
-  prev_velocity_tmp[2] = velocity[5];
+  if (acc_magnitude < 0.3) {
+    prev_velocity_tmp[0] = 0;
+    prev_velocity_tmp[1] = 0;
+    prev_velocity_tmp[2] = 0;
+  }
+  else {
+    prev_velocity_tmp[0] = velocity[1];
+    prev_velocity_tmp[1] = velocity[3];
+    prev_velocity_tmp[2] = velocity[5];
+  }
+
   ang_vel_tmp[0] = ang_vel_tmp[1];
   ang_vel_tmp[2] = ang_vel_tmp[3];
   ang_vel_tmp[4] = ang_vel_tmp[5];
@@ -412,23 +475,35 @@ static void main_kal_tool(const double acc[3],
 //  Serial.print(gravy, 2);
 //  Serial.print(",");
 //  Serial.println(gravz, 2); 
+//
+
 
   Serial.print(orientationEuler_kal[0], 2);
   Serial.print(",");
   Serial.print(orientationEuler_kal[1], 2);
   Serial.print(",");
-  Serial.println(orientationEuler_kal[2], 2); 
-//  Serial.print(cur_position[0]*1000000, 2);
-//  Serial.print(",");
-//  Serial.print(cur_position[1]*1000000, 2);
-//  Serial.print(",");
-//  Serial.println(cur_position[2]*1000000, 2); 
+  Serial.print(orientationEuler_kal[2], 2); 
+  Serial.print(",");
+//  Serial.print("P: ");
+  Serial.print(cur_position[0]*1000, 2);
+  Serial.print(",");
+  Serial.print(cur_position[1]*1000, 2);
+  Serial.print(",");
+  Serial.println(cur_position[2]*1000, 2); 
+//  Serial.print("V: ");
+  Serial.print(prev_velocity_tmp[0]*1000, 2);
+  Serial.print(",");
+  Serial.print(prev_velocity_tmp[1]*1000, 2);
+  Serial.print(",");
+  Serial.println(prev_velocity_tmp[2]*1000, 2); 
 
-//  Serial.print(prev_velocity_tmp[0]*1000, 2);
-//  Serial.print(",");
-//  Serial.print(prev_velocity_tmp[1]*1000, 2);
-//  Serial.print(",");
-//  Serial.println(prev_velocity_tmp[2]*1000, 2); 
+//  Serial.print("A: ");
+  Serial.print(acc_tmp[1], 2);
+  Serial.print(",");
+  Serial.print(acc_tmp[3], 2);
+  Serial.print(",");
+  Serial.println(acc_tmp[5], 2); 
+  Serial.println(acc_magnitude, 2); 
 //  Serial.print(",");
 //  Serial.print(acc[0], 2);
 //  Serial.print(",");
@@ -442,4 +517,111 @@ static void main_kal_tool(const double acc[3],
 //  Serial.print(",");
 //  Serial.print(mag[2], 2); 
 //  Serial.println(",");
+}
+static void gravOffsetRoll(double roll) {
+   if (roll > -170 && roll<-160){
+    gravOffset[0] = 0.01;
+    gravOffset[1] = 0.02;
+    gravOffset[2] = -0.14; 
+ }
+ else if (roll > -160 && roll<-150){
+    gravOffset[0] = 0.01;
+    gravOffset[1] = 0.04;
+    gravOffset[2] = -0.13; 
+ }
+ else if (roll > -150 && roll<-140){
+    gravOffset[0] = 0.01;
+    gravOffset[1] = 0.06;
+    gravOffset[2] = -0.12; 
+ }
+ else if (roll > -140 && roll<-130){
+    gravOffset[0] = 0;
+    gravOffset[1] = 0.08;
+    gravOffset[2] = -0.1; 
+ }
+ else if (roll > -130 && roll<-120){
+    gravOffset[0] = 0;
+    gravOffset[1] = 0.1;
+    gravOffset[2] = -0.08; 
+//    Serial.println("hello");
+ }
+ if (roll > 120 && roll<130){
+    gravOffset[0] = 0;
+    gravOffset[1] = 0.07;
+    gravOffset[2] = -0.04; 
+ }
+ else if (roll > 130 && roll<140){
+    gravOffset[0] = 0;
+    gravOffset[1] = 0.07;
+    gravOffset[2] = -0.05; 
+ }
+ else if (roll > 140 && roll<150){
+    gravOffset[0] = 0;
+    gravOffset[1] = 0.06;
+    gravOffset[2] = -0.05; 
+ }
+ else if (roll > 150 && roll<160){
+    gravOffset[0] = 0;
+    gravOffset[1] = 0.05;
+    gravOffset[2] = -0.06; 
+ }
+ else if (roll > 160 && roll<170){
+    gravOffset[0] = 0;
+    gravOffset[1] = 0.03;
+    gravOffset[2] = -0.08; 
+ }
+ else if (roll > 170 && roll<180){
+    gravOffset[0] = 0;
+    gravOffset[1] = 0.02;
+    gravOffset[2] = -0.1; 
+ }
+}
+
+static void lowPass(double x[2], double result[120], double input[1200]){
+     RealTimeFilter(x, 2, input, result);
+     swapZ(input, result);  
+ }
+static void swapZ(double result[120], double input[120])
+{
+  int idx0;
+
+  /* Loop over the array to initialize each element. */
+  for (idx0 = 0; idx0 < 120; idx0++) {
+    /* Set the value of the array element.
+       Change this value to the value that the application requires. */
+    result[idx0] = input[idx0];
+  }
+}
+
+static double argInit_real_T(void)
+{
+  return 0.0;
+}
+
+static void argInit_120x1_real_T(double result[120])
+{
+  int idx0;
+
+  /* Loop over the array to initialize each element. */
+  for (idx0 = 0; idx0 < 120; idx0++) {
+    /* Set the value of the array element.
+       Change this value to the value that the application requires. */
+    result[idx0] = argInit_real_T();
+  }
+}
+
+static void argInit_d2x1_real_T(double result_data[], int result_size[1])
+{
+  int idx0;
+
+  /* Set the size of the array.
+     Change this size to the value that the application requires. */
+  result_size[0] = 2;
+
+  /* Loop over the array to initialize each element. */
+  for (idx0 = 0; idx0 < 2; idx0++) {
+    /* Set the value of the array element.
+       Change this value to the value that the application requires. */
+    result_data[idx0] = argInit_real_T();
+  }
 }

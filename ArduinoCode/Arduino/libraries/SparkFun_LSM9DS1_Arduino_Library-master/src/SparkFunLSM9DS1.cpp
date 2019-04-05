@@ -380,7 +380,7 @@ void LSM9DS1::calibrateMag(bool loadIn)
 	int16_t magMin[3] = {0, 0, 0};
 	int16_t magMax[3] = {0, 0, 0}; // The road warrior
 
-	for (i=0; i<10000; i++)
+	for (i=0; i<1000; i++)
 	{
 		while (!magAvailable())
 			;

@@ -43,6 +43,7 @@ void kal_tool(const double acc[3], const double gyro[3], const double mag[3],
   double n;
   double orientationEuler_kal_tmp;
 
+
   /*  FUSE = ahrsfilter('AccelerometerNoise', 0.001, 'GyroscopeNoise', 0.001, 'MagnetometerNoise', 0.001); */
   FUSE.MagnetometerNoise = 0.1;
   FUSE.MagneticDisturbanceNoise = 0.5;
@@ -111,6 +112,7 @@ void kal_tool(const double acc[3], const double gyro[3], const double mag[3],
   }
 
   orientationEuler_kal_tmp = varargout_1_a * varargout_1_a * 2.0 - 1.0;
+
   orientationEuler_kal[0] = 57.295779513082323 * rt_atan2d_snf(varargout_1_a *
     varargout_1_d * 2.0 + varargout_1_b * varargout_1_c * 2.0,
     orientationEuler_kal_tmp + varargout_1_b * varargout_1_b * 2.0);

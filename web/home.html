@@ -185,8 +185,14 @@ body {
 
       function showData(result) {
         var values = result.data.split(',');
-        for (i in values) {
-          values[i] = (360 + values[i]) % 360;
+        if (values.length < 6) {
+          return;
+        }
+        for (j in values) {
+          if (j > 2) {
+            break;
+          }
+          values[j] = (360 + parseFloat(values[j])) % 360;
         }
         // orientation graph extension for polar plot
         // Plotly.extendTraces('orientation_graph', {
@@ -204,7 +210,7 @@ body {
           x: [[parseFloat(values[3])]],
           y: [[parseFloat(values[4])]],
           z: [[parseFloat(values[5])]]
-        }, [0]);
+        }, [0], 100);
       }
 
       <!-- mode: 'lines' for drawing line; mode: 'points' for drawing points -->
@@ -273,23 +279,28 @@ body {
         mode: "lines+markers",
         x: [0],
         y: [0],
-        name: "yaw"
+        name: "yaw",
+        yaxis: 'y'
       }, {
         type: "scatter",
         mode: "lines+markers",
         x: [0],
         y: [0],
-        name: "pitch"
+        name: "pitch",
+        yaxis: 'y2',
       }, {
         type: "scatter",
         mode: "lines+markers",
         x: [0],
         y: [0],
-        name: "roll"
+        name: "roll",
+        yaxis: 'y'
       }], {
         yaxis: {range: [0, 360]},
         yaxis2: {
-          range: [0,360]
+          range: [0,360],
+          side: 'right',
+          overlaying: 'y',
         }
       });
       </script>

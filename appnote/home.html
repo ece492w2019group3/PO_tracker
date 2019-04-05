@@ -124,23 +124,28 @@
         var name = values[0];
         var x = parseInt(values[1]);
         var y = parseFloat(values[2]);
-
-        Plotly.extendTraces("graph", {
+        // Extend the trace of the graph with a point of coordinates (x,y)
+        var maxNumPoints = 20;
+        var tracesToUpdate = [0];
+        var pointsToPlot = {
           x: [[x]],
           y: [[y]],
-          text: [[name]],
-        },[0],20);
+          text: [[name]]
+        }
+        Plotly.extendTraces("graph", pointsToPlot, tracesToUpdate, maxNumPoints)
       }
 
       var trace1 = {
-        x: [0],
-        y: [0],
-        text: ['zero'],
+        x: [],
+        y: [],
+        text: [],
+        textposition: 'bottom',
         mode: 'markers+text',
         type: 'scatter'
       };
 
       var layout = {
+        yaxis: {range: [0, 0.1]},
         autosize: true,
         height: 700
       }

@@ -4,8 +4,8 @@ Example and tutorial on serial communication with Node.js and plotting data to
 a browser. For this example, an Arduino mega 2560 was used as the serial input
 of the node server, but any serial input should be usable.
 Requirements:
-- Arduino device (but a different device connected serially could be used with the right output format)
-- Computer compatible with Node.js 
+- Arduino device (but a different device connected serially could be used with the right output format)  
+- Computer compatible with Node.js  
 
 Instructions:
 1) Install Node.js (https://nodejs.org/en/) Windows or macOS installers provided
@@ -78,6 +78,6 @@ sends the data through websockets to connected clients. Also acts as http server
 which sends home.html on request.
 
 Sources:  
-https://plot.ly/javascript/
-https://github.com/ITPNYU/physcomp/tree/master/labs2014/Node%20Serial%20Lab
-Last accessed on April 5th 2019
+https://plot.ly/javascript/  
+https://github.com/ITPNYU/physcomp/tree/master/labs2014/Node%20Serial%20Lab  
+Last accessed on April 5th 2019  

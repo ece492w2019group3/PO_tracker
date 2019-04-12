@@ -1,47 +1,21 @@
+
+
 /*****************************************************************
-LSM9DS1_Basic_I2C.ino
-SFE_LSM9DS1 Library Simple Example Code - I2C Interface
-Jim Lindblom @ SparkFun Electronics
-Original Creation Date: April 30, 2015
+OrientationCalculation.imo
+Based off LSM9DS1_Basic_I2C.ino made by Jim Lindblom @ Sparkfun Electronics
+The original code can be found below:
 https://github.com/sparkfun/LSM9DS1_Breakout
-The LSM9DS1 is a versatile 9DOF sensor. It has a built-in
-accelerometer, gyroscope, and magnetometer. Very cool! Plus it
-functions over either SPI or I2C.
-This Arduino sketch is a demo of the simple side of the
-SFE_LSM9DS1 library. It'll demo the following:
-* How to create a LSM9DS1 object, using a constructor (global
-  variables section).
-* How to use the begin() function of the LSM9DS1 class.
-* How to read the gyroscope, accelerometer, and magnetometer
-  using the readGryo(), readAccel(), readMag() functions and 
-  the gx, gy, gz, ax, ay, az, mx, my, and mz variables.
-* How to calculate actual acceleration, rotation speed, 
-  magnetic field strength using the calcAccel(), calcGyro() 
-  and calcMag() functions.
-* How to use the data from the LSM9DS1 to calculate 
-  orientation and heading.
-Hardware setup: This library supports communicating with the
-LSM9DS1 over either I2C or SPI. This example demonstrates how
-to use I2C. The pin-out is as follows:
-  LSM9DS1 --------- Arduino
-   SCL ---------- SCL (A5 on older 'Duinos')
-   SDA ---------- SDA (A4 on older 'Duinos')
-   VDD ------------- 3.3V
-   GND ------------- GND
-(CSG, CSXM, SDOG, and SDOXM should all be pulled high. 
-Jumpers on the breakout board will do this for you.)
-The LSM9DS1 has a maximum voltage of 3.6V. Make sure you power it
-off the 3.3V rail! I2C pins are open-drain, so you'll be 
-(mostly) safe connecting the LSM9DS1's SCL and SDA pins 
-directly to the Arduino.
-Development environment specifics:
-  IDE: Arduino 1.6.3
-  Hardware Platform: SparkFun Redboard
-  LSM9DS1 Breakout Version: 1.0
-This code is beerware. If you see me (or any other SparkFun 
-employee) at the local, and you've found our code helpful, 
-please buy us a round!
-Distributed as-is; no warranty is given.
+
+Last Modification Date: April 12, 2019
+Modifications made by Riley Voon @ University of Alberta
+
+This Arduino sketch aims to read the LSM9DS1's gyroscope, 
+accelerometer, and magnetomete rover the I2C connection and
+find position and orientation by using several
+algorithms originally from MATLAB converted into C code
+using MATLAB C Coder. These algorithms include a Kalman filter
+and a trajectory calculation algorithm.
+
 *****************************************************************/
 // The SFE_LSM9DS1 library requires both Wire and SPI be
 // included BEFORE including the 9DS1 library.
@@ -66,23 +40,16 @@ extern "C"{
 //////////////////////////
 // LSM9DS1 Library Init //
 //////////////////////////
-// Use the LSM9DS1 class to create an object. [imu] can be
-// named anything, we'll refer to that throught the sketch.
 LSM9DS1 imu;
 
-///////////////////////
-// Example I2C Setup //
-///////////////////////
+// I2C Setup 
 // SDO_XM and SDO_G are both pulled high, so our addresses are:
 #define LSM9DS1_M 0x1E // Would be 0x1C if SDO_M is LOW
 #define LSM9DS1_AG  0x6B // Would be 0x6A if SDO_AG is LOW
 
-////////////////////////////
-// Sketch Output Settings //
-////////////////////////////
+// Output Settings
 #define PRINT_CALCULATED
-//#define PRINT_RAW
-#define PRINT_SPEED 50 // 250 ms between prints
+#define PRINT_SPEED 20 // 20 ms between prints
 static unsigned long lastPrint = 0; // Keep track of print time
 double g_xyz[3];
 double a_xyz[3];
@@ -93,46 +60,23 @@ double prev_position_tmp[3];
 double prev_velocity_tmp[3];
 c_matlabshared_rotations_intern prev_orientation = {1, 0, 0, 0};
 d_matlabshared_rotations_intern orient;
-c_matlabshared_rotations_intern pitchRotation = {1, 0, 0, 0};
 const double g = 9.80;
-double gravx = 0; 
-double gravy = 0;
-double gravz = 0;
-double gravOffset[3];
-double alpha = 0.8;
-int duration = 1000;
-int fs = 30;
-int N = 10000;
+const double acc_mag_threshold = 0.3;
+double grav[3]; 
+int fs = 50;
 
-static double mag_norm[2];
-
-static double dv0[120];
-
-static double z[120];
-
-// Earth's magnetic field varies by location. Add or subtract 
-// a declination to get a more accurate heading. Calculate 
-// your's here:
-// http://www.ngdc.noaa.gov/geomag-web/#declination
-#define DECLINATION +14.25 // Declination (degrees) in Boulder, CO.
-
+// Initialize the Kalman filter and trajectory algorithm tools, and
+// begin communication with the IMU over the I2C connection.
 void setup() 
 {
   
   Serial.begin(115200);
-//  RealTimeFilter_initialize();
   kal_tool_initialize();
   trajectory_tool_initialize();
-  // Before initializing the IMU, there are a few settings
-  // we may need to adjust. Use the settings struct to set
-  // the device's communication mode and addresses:
+  // Set IMU communication mode and addresses
   imu.settings.device.commInterface = IMU_MODE_I2C;
   imu.settings.device.mAddress = LSM9DS1_M;
   imu.settings.device.agAddress = LSM9DS1_AG;
-//  imu.setSampleRate(10); // Set sample rate to 10Hz
-  // The above lines will only take effect AFTER calling
-  // imu.begin(), which verifies communication with the IMU
-  // and turns it on.
 
   if (!imu.begin())
   {
@@ -145,23 +89,24 @@ void setup()
     while (1)
       ;
   }
-//  Serial.println("accel and gyro calibration start");
-//  imu.calibrate(1);
-//  Serial.println("accel and gyro calibration finished");
+
+  // Calibrate accelerometer, gyroscope, and magnetometer
+  Serial.println("accel and gyro calibration start");
+  imu.calibrate(1);
+  Serial.println("accel and gyro calibration finished");
 
   Serial.println("magnetometer calibration started");
   imu.calibrateMag(1);
-  Serial.println("magnetometer Calibration fininshed");  
+  Serial.println("magnetometer Calibration fininshed"); 
+  // Get initial acceleration 
   if ( imu.accelAvailable() )
   {
-  // To read from the accelerometer, first call the
-  // readAccel() function. When it exits, it'll update the
-  // ax, ay, and az variables with the most current data.
     imu.readAccel();
   }
   acc_tmp[0] = imu.calcAccel(imu.ax);
   acc_tmp[2] = imu.calcAccel(imu.ay);
   acc_tmp[4] = imu.calcAccel(imu.az);
+  // Initialize global variables
   prev_position_tmp[0] = 0;
   prev_position_tmp[1] = 0;
   prev_position_tmp[2] = 0;
@@ -171,87 +116,68 @@ void setup()
   ang_vel_tmp[0] = 0;
   ang_vel_tmp[2] = 0;
   ang_vel_tmp[4] = 0;
-  gravOffset[0] = 0;
-  gravOffset[1] = 0;
-  gravOffset[2] = 0; 
-//  argInit_120x1_real_T(dv0);
-
-//  argInit_120x1_real_T(z); 
-
-//  acc_x[0]=0.0;
-//  acc_y[0]=0.0;
-//  acc_z[0]=0.0;
+  grav[0] = 0;
+  grav[1] = 0;
+  grav[2] = 0;
   getQuaternion(0, 0, 0, &prev_orientation);
 }
 
+// Constantly read from the IMU and calculate orientation and position
 void loop()
 {
   // Update the sensor values whenever new data is available
   if ( imu.gyroAvailable() )
   {
-    // To read from the gyroscope,  first call the
-    // readGyro() function. When it exits, it'll update the
-    // gx, gy, and gz variables with the most current data.
+    // Read from the gyroscope
     imu.readGyro();
   }
   if ( imu.accelAvailable() )
   {
-    // To read from the accelerometer, first call the
-    // readAccel() function. When it exits, it'll update the
-    // ax, ay, and az variables with the most current data.
+    // Read from the accelerometer
     imu.readAccel();
   }
   if ( imu.magAvailable() )
   {
-    // To read from the magnetometer, first call the
-    // readMag() function. When it exits, it'll update the
-    // mx, my, and mz variables with the most current data.
+    // Read from the magnetometer
     imu.readMag();
   }
   
   if ((lastPrint + PRINT_SPEED) < millis())
   {
-//     printGyro();  // Print "G: gx, gy, gz"
-//     printAccel(); // Print "A: ax, ay, az"
-//     printMag();   // Print "M: mx, my, mz"
-    // Print the heading and orientation for fun!
-    // Call print attitude. The LSM9DS1's mag x and y
-    // axes are opposite to the accelerometer, so my, mx are
-    // substituted for each other.
-//     printAttitude(imu.ax, imu.ay, imu.az, 
-//                  -imu.my, -imu.mx, imu.mz);
+    // Scale gyroscope, accelerometer, and magnetometer values to the
+    // units needed by algorithms
+    // Gyroscope from degrees to radians
     g_xyz[0] = imu.calcGyro(imu.gx) * 0.0174533;
     g_xyz[1] = imu.calcGyro(imu.gy) * 0.0174533;
     g_xyz[2] = imu.calcGyro(imu.gz) * 0.0174533;
+    // Acceleration from g to m/s^2
     a_xyz[0] = imu.calcAccel(imu.ax) * g;
     a_xyz[1] = imu.calcAccel(imu.ay) * g;
     a_xyz[2] = imu.calcAccel(imu.az) * g;
+    // Magnetometer from gauss to microTeslas
     m_xyz[0] = imu.calcMag(imu.mx) * 100;
     m_xyz[1] = imu.calcMag(imu.my) * 100;
     m_xyz[2] = imu.calcMag(imu.mz) * 100; 
-
-    main_kal_tool(a_xyz, g_xyz, m_xyz, acc_tmp, ang_vel_tmp, prev_position_tmp, prev_velocity_tmp, prev_orientation, orient, pitchRotation);
-//    Serial.println();
     
+    // Call the kalman filter algorithm and trajectory calculation
+    main_kal_tool(a_xyz, g_xyz, m_xyz, acc_tmp, ang_vel_tmp, prev_position_tmp, prev_velocity_tmp, prev_orientation, orient);    
     lastPrint = millis(); // Update lastPrint time
   }
 }
 
+// Test function to check gyroscope values
 void printGyro()
 {
-  // Now we can use the gx, gy, and gz variables as we please.
-  // Either print them as raw ADC values, or calculated in DPS.
   Serial.print("G: ");
+  // Print calculated angular velocity in degrees per second
 #ifdef PRINT_CALCULATED
-  // If you want to print calculated values, you can use the
-  // calcGyro helper function to convert a raw ADC value to
-  // DPS. Give the function the value that you want to convert.
   Serial.print(imu.calcGyro(imu.gx), 2);
   Serial.print(", ");
   Serial.print(imu.calcGyro(imu.gy), 2);
   Serial.print(", ");
   Serial.print(imu.calcGyro(imu.gz), 2);
   Serial.println(" deg/s");
+  // Print raw ADC values
 #elif defined PRINT_RAW
   Serial.print(imu.gx);
   Serial.print(", ");
@@ -261,21 +187,20 @@ void printGyro()
 #endif
 }
 
+// Test function to check accelerometer values
 void printAccel()
 {  
-  // Now we can use the ax, ay, and az variables as we please.
-  // Either print them as raw ADC values, or calculated in g's.
+
   Serial.print("A: ");
+  // Print calculated acceleration in g
 #ifdef PRINT_CALCULATED
-  // If you want to print calculated values, you can use the
-  // calcAccel helper function to convert a raw ADC value to
-  // g's. Give the function the value that you want to convert.
   Serial.print(imu.calcAccel(imu.ax), 2);
   Serial.print(", ");
   Serial.print(imu.calcAccel(imu.ay), 2);
   Serial.print(", ");
   Serial.print(imu.calcAccel(imu.az), 2);
   Serial.println(" g");
+  // Print raw ADC values
 #elif defined PRINT_RAW 
   Serial.print(imu.ax);
   Serial.print(", ");
@@ -286,21 +211,19 @@ void printAccel()
 
 }
 
+// Test function to check magnetometer values
 void printMag()
 {  
-  // Now we can use the mx, my, and mz variables as we please.
-  // Either print them as raw ADC values, or calculated in Gauss.
   Serial.print("M: ");
+  // Print magnetometer values in gauss
 #ifdef PRINT_CALCULATED
-  // If you want to print calculated values, you can use the
-  // calcMag helper function to convert a raw ADC value to
-  // Gauss. Give the function the value that you want to convert.
   Serial.print(imu.calcMag(imu.mx), 2);
   Serial.print(", ");
   Serial.print(imu.calcMag(imu.my), 2);
   Serial.print(", ");
   Serial.print(imu.calcMag(imu.mz), 2);
   Serial.println(" gauss");
+  // Print raw ADC values
 #elif defined PRINT_RAW
   Serial.print(imu.mx);
   Serial.print(", ");
@@ -310,52 +233,13 @@ void printMag()
 #endif
 }
 
-// Calculate pitch, roll, and heading.
-// Pitch/roll calculations take from this app note:
-// http://cache.freescale.com/files/sensors/doc/app_note/AN3461.pdf?fpsp=1
-// Heading calculations taken from this app note:
-// http://www51.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/Magnetic__Literature_Application_notes-documents/AN203_Compass_Heading_Using_Magnetometers.pdf
-void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
-{
-  float roll = atan2(ay, az);
-  float pitch = atan2(-ax, sqrt(ay * ay + az * az));
-  float yaw;
-  
-  float heading;
-  if (my == 0)
-    heading = (mx < 0) ? PI : 0;
-  else
-    heading = atan2(mx, my);
-    
-  heading -= DECLINATION * PI / 180;
-  
-  if (heading > PI) heading -= (2 * PI);
-  else if (heading < -PI) heading += (2 * PI);
-  float Yh = (my * cos(roll)) - (mz * sin(roll));
-  float Xh = (mx * cos(pitch))+(my * sin(roll)*sin(pitch)) + (mz * cos(roll) * sin(pitch));
 
-  yaw =  atan2(Yh, Xh);
-  // Convert everything from radians to degrees:
-  heading *= 180.0 / PI;
-  pitch *= 180.0 / PI;
-  roll  *= 180.0 / PI;
-  yaw *= 180 / PI;
-
-  Serial.print("Pitch, Roll, Yaw: ");
-  Serial.print(pitch, 2);
-  Serial.print(", ");
-  Serial.print(roll, 2);
-  Serial.print(", ");
-  Serial.println(yaw, 2);
-//  Serial.print("Heading: "); Serial.println(heading, 2);
-}
-
+// Obtain orientation and position using
 static void main_kal_tool(const double acc[3], 
         const double gyr[3], const double mg[3], double acc_tmp[6], double ang_vel_tmp[6], 
         double prev_position_tmp[3], double prev_velocity_tmp[3], 
         c_matlabshared_rotations_intern prev_orientation, 
-        d_matlabshared_rotations_intern orient, 
-        c_matlabshared_rotations_intern pitchRotation) {
+        d_matlabshared_rotations_intern orient) {
   static double orientationEuler_kal[3];
   static double angularvelocity[3];
   static double pos[3];
@@ -367,81 +251,55 @@ static void main_kal_tool(const double acc[3],
   static double acc_filtered[3];
   float acc_magnitude;
 
-//  acc_x[1] = acc[0];
-//  acc_y[1] = acc[1];
-//  acc_z[1] = acc[2];
-//  Serial.println("Hello");
-//
-//  lowPass(acc_x, z_x, dv0_x);
-//  lowPass(acc_y, z_y, dv0_y);
-//  lowPass(acc_z, z_z, dv0_z);
-//  Serial.println("It's me");
-
-//  acc_x[0] = acc[0];
-//  acc_y[0] = acc[1];;
-//  acc_z[0] = acc[2];
-//  acc[0] = acc_x[1];
-//  acc_filtered[1] = acc_y[1];
-//  acc_filtered[2] = acc_z[1];
-  
-    
+  // Call the Kalman filter to obtain orientation and angular velocity
+  // Inputs: acceleration, angular velocity, magnetic field strength
+  // Outputs: orientation (in NED coordinates), angular velocity
   kal_tool(acc, gyr, mg, orientationEuler_kal, angularvelocity);
+  // Convert the orientation in NED coordinates into orientation in quaternions
+  // Inputs: Yaw, pitch, roll
+  // Outputs: Orientation in quaternions
   getQuaternion(orientationEuler_kal[0], orientationEuler_kal[1], orientationEuler_kal[2], &prev_orientation);
-//  gravOffsetRoll(orientationEuler_kal[2]);
-  gravx = 2 * (prev_orientation.b*prev_orientation.d - prev_orientation.a*prev_orientation.c);
-  gravy = 2 * (prev_orientation.a*prev_orientation.b + prev_orientation.c*prev_orientation.d);
-  gravz = prev_orientation.a*prev_orientation.a - prev_orientation.b*prev_orientation.b - prev_orientation.c*prev_orientation.c + prev_orientation.d*prev_orientation.d;
-  acc_tmp[1] = acc[0] - gravx*g - gravOffset[0];
-  acc_tmp[3] = acc[1] - gravy*g - gravOffset[1];
-  acc_tmp[5] = acc[2] - gravz*g - gravOffset[2];
+  // Get the gravity acting on each axis
+  // Inputs: Orientation in quaternions
+  // Outputs: Gravity in X, Y, and Z. 
+  gravity_calculation(prev_orientation);
+  // Remove gravity from the acceleration;
+  acc_tmp[1] = acc[0] - grav[0]*g;
+  acc_tmp[3] = acc[1] - grav[1]*g;
+  acc_tmp[5] = acc[2] - grav[2]*g;
+  // If the magnitude of the linear acceleration is less than the threshold value,
+  // force acceleration to 0. Minimizes drift due to improperly removed gravity.
   acc_magnitude = sqrt(acc_tmp[1]*acc_tmp[1] + acc_tmp[3]*acc_tmp[3] + acc_tmp[5]*acc_tmp[5]);
-  if (acc_magnitude < 0.12) {
+  if (acc_magnitude < acc_mag_threshold) {
     acc_tmp[1] = 0;
     acc_tmp[3] = 0;
     acc_tmp[5] = 0;
-//    prev_position_tmp[0]=0;
-//    prev_position_tmp[1]=0;
-//    prev_position_tmp[2]=0;
   }
-//  Serial.println(acc_magnitude,2);
+  // Update angular velocity
   ang_vel_tmp[1] = angularvelocity[0];
   ang_vel_tmp[3] = angularvelocity[1];
   ang_vel_tmp[5] = angularvelocity[2];
-//  Serial.print("A: ");
-//  Serial.print(acc_tmp[1], 2);
-//  Serial.print(",");
-//  Serial.print(acc_tmp[3], 2);
-//  Serial.print(",");
-//  Serial.print(acc_tmp[5], 2); 
-//  Serial.print(","); 
-//
+  
+  // Call the trajectory calculation tool to obtain new position and velocity given
+  // linear acceleration and angular velocity.
+  // Inputs: Linear acceleration, angular velocity, previous position, previous velocity,
+  //         previous orientation
+  // Outputs: New position, velocity, acceleration, angular velocity, orientation 
   trajectory_tool(acc_tmp, ang_vel_tmp,
                   prev_position_tmp, prev_orientation, prev_velocity_tmp, fs, cur_position, &orient, velocity,
                   acceleration, angularVelocity);
-//  velocity[1] = prev_velocity_tmp[0] + acc_tmp[1] * fs / 2.0;
-//  velocity[3] = prev_velocity_tmp[1] + acc_tmp[3] * fs / 2.0;
-//  velocity[5] = prev_velocity_tmp[2] + acc_tmp[5] * fs / 2.0;
-//  cur_position[0] = prev_position_tmp[0] + velocity[1] * fs / 2.0;
-//  cur_position[1] = prev_position_tmp[1] + velocity[3] * fs / 2.0;
-//  cur_position[2] = prev_position_tmp[2] + velocity[5] * fs / 2.0;
-
+                  
+  // Update old acceleration, position, and velocity
   acc_tmp[0] = acc_tmp[1];
   acc_tmp[2] = acc_tmp[3];
   acc_tmp[4] = acc_tmp[5];
   prev_position_tmp[0] = cur_position[0];
   prev_position_tmp[1] = cur_position[1];
   prev_position_tmp[2] = cur_position[2];
-//
-//  prev_orientation.a = orient.a[1];
-//  prev_orientation.b = orient.b[1];
-//  prev_orientation.c = orient.c[1];
-//  prev_orientation.d = orient.d[1];
-  
-//  gravx = alpha * gravx + (1 - alpha) * acc[0];
-//  gravy = alpha * gravy + (1 - alpha) * acc[1];
-//  gravz = alpha * gravz + (1 - alpha) * acc[2];
-//  
-  if (acc_magnitude < 0.12) {
+
+  // If the magnitude of the linear acceleration is less than the threshold value,
+  // force velocity to 0. Minimizes drift due to improperly removed gravity.
+  if (acc_magnitude < acc_mag_threshold) {
     prev_velocity_tmp[0] = 0;
     prev_velocity_tmp[1] = 0;
     prev_velocity_tmp[2] = 0;
@@ -451,56 +309,37 @@ static void main_kal_tool(const double acc[3],
     prev_velocity_tmp[1] = velocity[3];
     prev_velocity_tmp[2] = velocity[5];
   }
-
+  
+  // Update the angular velocity
   ang_vel_tmp[0] = ang_vel_tmp[1];
   ang_vel_tmp[2] = ang_vel_tmp[3];
   ang_vel_tmp[4] = ang_vel_tmp[5];
 
-//  Serial.print(gravx, 2);
-//  Serial.print(",");
-//  Serial.print(gravy, 2);
-//  Serial.print(",");
-//  Serial.println(gravz, 2); 
-//
-
-
+  // Print the orientation and position to serial.
   Serial.print(orientationEuler_kal[0], 2);
   Serial.print(",");
   Serial.print(orientationEuler_kal[1], 2);
   Serial.print(",");
   Serial.print(orientationEuler_kal[2], 2); 
   Serial.print(",");
-//  Serial.print("P: ");
   Serial.print(cur_position[0]*1000, 2);
   Serial.print(",");
   Serial.print(cur_position[1]*1000, 2);
   Serial.print(",");
-  Serial.println(cur_position[2]*1000, 2); 
-//  Serial.print("V: ");
-//  Serial.print(prev_velocity_tmp[0]*1000, 2);
-//  Serial.print(",");
-//  Serial.print(prev_velocity_tmp[1]*1000, 2);
-//  Serial.print(",");
-//  Serial.println(prev_velocity_tmp[2]*1000, 2); 
+  Serial.print(cur_position[2]*1000, 2); 
+  Serial.print(",");
+  // If the position is 0, reset the graph to its original state.
+  if (sqrt(prev_position_tmp[0]*prev_position_tmp[0] + prev_position_tmp[1]*prev_position_tmp[1] + prev_position_tmp[2]*prev_position_tmp[2]) == 0){
+    Serial.println("0");
+  }
+  else {
+    Serial.println("0");
+  }
+}
 
-//  Serial.print("A: ");
-//  Serial.print(acc_tmp[1], 2);
-//  Serial.print(",");
-//  Serial.print(acc_tmp[3], 2);
-//  Serial.print(",");
-//  Serial.println(acc_tmp[5], 2); 
-//  Serial.println(acc_magnitude, 2); 
-//  Serial.print(",");
-//  Serial.print(acc[0], 2);
-//  Serial.print(",");
-//  Serial.print(acc[1], 2);
-//  Serial.print(",");
-//  Serial.print(acc[2], 2); 
-//  Serial.println(",");
-//  Serial.print(mag[0], 2);
-//  Serial.print(",");
-//  Serial.print(mag[1], 2);
-//  Serial.print(",");
-//  Serial.print(mag[2], 2); 
-//  Serial.println(",");
+// Get gravity in each axis from orientation in quaternions
+static void gravity_calculation(c_matlabshared_rotations_intern prev_orientation) {
+  grav[0] = 2 * (prev_orientation.b*prev_orientation.d - prev_orientation.a*prev_orientation.c);
+  grav[1] = 2 * (prev_orientation.a*prev_orientation.b + prev_orientation.c*prev_orientation.d);
+  grav[2] = prev_orientation.a*prev_orientation.a - prev_orientation.b*prev_orientation.b - prev_orientation.c*prev_orientation.c + prev_orientation.d*prev_orientation.d;
 }

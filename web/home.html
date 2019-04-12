@@ -1,3 +1,9 @@
+<!-- Code written for Group 3 Capstone project Winter 2019
+      By: Maxime Houle and Joanne Lai
+
+      HTML Code for displaying results of the IMU sent by server.js-->
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -133,9 +139,6 @@ body {
     <div id="position_graph" ><!-- Plotly chart will be drawn inside this DIV --></div>
       <script>
       <!-- JAVASCRIPT CODE GOES HERE -->
-      function rand() {
-        return Math.random();
-      }
 
       var trace1 = {
         x: [0],
@@ -147,15 +150,17 @@ body {
       <!-- from https://plot.ly/javascript/setting-graph-size/ -->
       var layout = {
         title: 'Position',
-        autosize: true,
-        height: 700
+        autoscale: false,
+        height: 700,
+        scene: {
+        }
       }
 
       Plotly.plot('position_graph', [trace1], layout);
       </script>
     </body>
 
-
+    <button type="button" onclick="pauseStream()">Pause/Stream</button>
     <h2>Orientation Graph</h2>
     <head>
     <!-- Plotly.js -->
@@ -165,15 +170,16 @@ body {
     </head>
 
     <body>
-    <div id="orientation_graph" ><!-- Plotly chart will be drawn inside this DIV --></div>
+      <div id="2d_orientation_graph"> </div>
       <script>
       <!-- JAVASCRIPT CODE GOES HERE -->
-      // websocket communication code from https://github.com/ITPNYU/physcomp/tree/master/labs2014/Node%20Serial%20Lab
+      // websocket communication code inspired by https://github.com/ITPNYU/physcomp/tree/master/labs2014/Node%20Serial%20Lab
       var socket = new WebSocket("ws://localhost:8080");
       var text;
       var i = 0;
       setup();
 
+      // set methods for websocket to run on open/receiving data
       function setup() {
         socket.onopen = openSocket;
         socket.onmessage = showData;
@@ -183,6 +189,8 @@ body {
 
       }
 
+      // displays data obtained from websocket on the plot.
+      // Expects appropriate format, if length is too small will skip
       function showData(result) {
         var values = result.data.split(',');
         if (values.length < 6) {
@@ -194,12 +202,8 @@ body {
           }
           values[j] = (360 + parseFloat(values[j])) % 360;
         }
-        // orientation graph extension for polar plot
-        // Plotly.extendTraces('orientation_graph', {
-        //   r: [[1],[1],[1]],
-        //   theta: [[parseFloat(values[0])], [parseFloat(values[1])], [parseFloat(values[2])]],
-        // },[0,1,2],10);
-        // orientation graph extension for 2d plot
+        // expected values format is "yaw,pitch,roll,x,y,z\n"
+        // following two method calls will extend both graphs with the new data
         Plotly.extendTraces("2d_orientation_graph", {
           x: [[i],[i],[i]],
           y: [[parseFloat(values[0])], [parseFloat(values[1])], [parseFloat(values[2])]],
@@ -213,67 +217,7 @@ body {
         }, [0], 100);
       }
 
-      <!-- mode: 'lines' for drawing line; mode: 'points' for drawing points -->
-      // orientation graph creation for scatterpolar
-      // Plotly.plot('orientation_graph', [{
-      //   type: 'scatterpolar',
-      //   mode: 'markers',
-      //   r: [],
-      //   theta: [],
-      //   opacity: 1,
-      //   subplot: "polar",
-      // }, {
-      //   type: "scatterpolar",
-      //   mode: "markers",
-      //   r: [],
-      //   theta: [],
-      //   opacity: 1,
-      //   subplot: "polar2",
-      // }, {
-      //   type: "scatterpolar",
-      //   mode: "markers",
-      //   r: [],
-      //   theta: [],
-      //   opacity: 1,
-      //   subplot: "polar3",
-      // }], {
-      //   polar: {
-      //     domain: {
-      //       x: [0,0.3],
-      //       y: [0,1],
-      //       name: "yaw"
-      //     },
-      //     radialaxis: {
-      //       visible: false
-      //     }
-      //   },
-      //   polar2: {
-      //     domain: {
-      //       x: [0.33, 0.63],
-      //       y: [0,1],
-      //       name: "pitch"
-      //     },
-      //     radialaxis: {
-      //       visible: false
-      //     }
-      //   },
-      //   polar3: {
-      //     domain: {
-      //       x: [0.66, 1],
-      //       y: [0,1],
-      //       name: "roll"
-      //     },
-      //     radialaxis: {
-      //       visible: false
-      //     }
-      //   },
-      // });
-      </script>
-
-    </body>
-    <body>
-      <div id="2d_orientation_graph"> </div>
-      <script>
+      // instantiate the orienation graph
       Plotly.plot("2d_orientation_graph", [{
         type: "scatter",
         mode: "lines+markers",
@@ -296,14 +240,32 @@ body {
         name: "roll",
         yaxis: 'y'
       }], {
-        yaxis: {range: [0, 360]},
-        yaxis2: {
+          yaxis: {range: [0, 360]},
+          yaxis2: {
           range: [0,360],
           side: 'right',
           overlaying: 'y',
         }
       });
+
+      // pause button functionality to allow user to view paused results.
+      function pauseStream() {
+        if (socket != null) {
+          socket.close();
+          socket = null;
+        } else {
+          socket = new WebSocket("ws://localhost:8080");
+          setup();
+          Plotly.extendTraces('position_graph', {
+            x: [[]],
+            y: [[]],
+            z: [[]]
+          }, [0], 0);
+        }
+      }
       </script>
+    </body>
+    <body>
     </body>
   </div>
 </div>

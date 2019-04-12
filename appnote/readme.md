@@ -10,6 +10,10 @@ Requirements:
 Instructions:
 1) Install Node.js (https://nodejs.org/en/) Windows or macOS installers provided
 2) Clone the contents of this appnote.
+
+When refering to the terminal, for macOS the standard terminal is usable,
+for Windows, installing Node.js will provide a Node.js command prompt.
+
 3) In the terminal, navigate to the folder with server.js
 We must now install the node dependencies to run server.js
 4) In the terminal, run the following commands (Working directory same as server.js):
